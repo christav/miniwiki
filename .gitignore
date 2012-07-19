@@ -1,5 +1,7 @@
 projects/*
 targets/*
+local_package.csx/*
+miniwiki/server.js.logs/*
 
 # Visual Studio #
 *.suo
