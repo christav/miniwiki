@@ -37,18 +37,32 @@ _ = require("underscore");
 		return parseResult;
 	}
 
-	function any(input, callback) {
+	function anyParser(input) {
 		// The '.' operator, matches any single character except end of string
 		if (input.index < input.text.length) {
-			return matchedResult({
+			return {
 				matched: true,
 				text: input.text.charAt(input.index),
 				consumed: 1,
 				result: null
-			}, callback);
+			};
 		} else {
 			return failedResult;
 		}
+	}
+
+	anyParser.then = function (callback) {
+		return function (input) {
+			var result = anyParser(input);
+			if(result.matched) {
+				callback(result);
+			}
+			return result;
+		}
+	}
+
+	function any() {
+		return anyParser;
 	}
 
 	function end(input, callback) {

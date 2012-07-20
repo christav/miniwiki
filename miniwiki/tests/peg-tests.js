@@ -5,41 +5,41 @@ describe("Parser utils", function () {
     
     describe("match any", function () {
         it('should match if there are characters in the string', function () {
-            peg.any({ text: "abc", index: 0}).should.have.property("matched", true);
+            peg.any()({ text: "abc", index: 0}).should.have.property("matched", true);
         });
         
         it('should match the correct character', function () {
-            peg.any({ text: "abc", index: 1}).should.have.property("text", "b");
+            peg.any()({ text: "abc", index: 1}).should.have.property("text", "b");
         });
 
         it('should consume one character', function () {
-            peg.any({ text: "abc", index: 0}).should.have.property("consumed", 1);
+            peg.any()({ text: "abc", index: 0}).should.have.property("consumed", 1);
         });
 
         it('should not match if all characters have been consumed', function () {
-            peg.any({text: "abc", index: 3}).should.have.property("matched", false);
+            peg.any()({text: "abc", index: 3}).should.have.property("matched", false);
         });
 
         it('should invoke callback on successful match', function () {
             var called = false;
-            peg.any({ text: "qed", index: 0}, function (parseResult) {
+            peg.any().then(function (parseResult) {
                 called = true;
-            });
+            })({ text: "qed", index: 0});
             called.should.be.true;
         });
 
         it('should not invoke callback on failed match', function () {
             var called = false;
-            peg.any({ text: "", index: 0}, function (parseResult) {
+            peg.any().then(function (parseResult) {
                 called = true;
-            });
+            })({ text: "", index: 0});
             called.should.be.false;
         });
 
         it('should let callback set the parse result', function () {
-            var result = peg.any({ text: "this is some text", index: 2}, function (parseResult) {
+            var result = peg.any().then(function (parseResult) {
                 parseResult.result = "this is my new result";
-            });
+            })({ text: "this is some text", index: 2});
             result.result.should.equal("this is my new result");
         });
     });
@@ -117,7 +117,7 @@ describe("Parser utils", function () {
 
     describe("not operator", function () {
         it('should make any match at end of string', function () {
-            var parser = peg.not(peg.any);
+            var parser = peg.not(peg.any());
             parser({text: "abc", index: 3}).matched.should.be.true;
         });
 
@@ -128,19 +128,19 @@ describe("Parser utils", function () {
 
         it('should invoke callback on successful match', function () {
             var called = false;
-            peg.not(peg.any, function () { called = true; })({ text: "abc", index: 3 });
+            peg.not(peg.any(), function () { called = true; })({ text: "abc", index: 3 });
             called.should.be.true;
         });
     });
 
     describe("and operator", function () {
         it('should match', function () {
-            var parser = peg.and(peg.any);
+            var parser = peg.and(peg.any());
             parser({ text: "abc", index: 0}).matched.should.be.true;
         });
 
         it('should not consume when matching', function () {
-            var parser = peg.and(peg.any);
+            var parser = peg.and(peg.any());
             parser({text: "abc", index: 1}).consumed.should.equal(0);
         });
 
