@@ -34,6 +34,29 @@ describe("Parser utils", function () {
         });
     });
 
+    describe("match regex", function () {
+        it('should match when created with regex', function () {
+            var parser = peg.match(/[ab]/);
+            parser({ text: "bba", index: 1}).matched.should.be.true;
+        });
+
+        it("should not match if regex match doesn't start at current location", function () {
+            var parser = peg.match(/cd/);
+            parser({ text: "abcde", index: 1}).matched.should.be.false;
+        });
+
+        it("should return correct matched text", function () {
+            var parser = peg.match(/bcd/);
+            parser({ text: "abcdef", index: 1}).text.should.equal("bcd");
+        });
+
+        it("should consume entire matched text", function () {
+            var parser = peg.match(/bcd/);
+            parser({ text: "abcdef", index: 1}).consumed.should.equal(3);
+        });
+    })
+
+
     describe("not operator", function () {
         it('should make any match at end of string', function () {
             var parser = peg.not(peg.any);

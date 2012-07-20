@@ -58,11 +58,38 @@ _ = require("underscore");
 						text: inputSubstring,
 						consumed: matchLength,
 						result: null
-					}
+					};
 				}
 			}
 			return failedResult;
 		}
+	}
+
+	function matchRegex(regex) {
+		// A parser generator function that matches the given regex at the current
+		// location in the text
+		return function (input) {
+			var matches = input.text.substring(input.index).match(regex);
+			if (matches === null || matches.index !== 0) {
+				return failedResult;
+			}
+
+			return {
+				matched: true,
+				text: matches[0],
+				consumed: matches[0].length,
+				result: null
+			};
+		}
+	}
+
+	function match(stringOrRegex) {
+		// "overloaded" function that figures out wether to call
+		// matchString or matchRegex based on the type passed in.
+		if (_.isRegExp(stringOrRegex)) {
+			return matchRegex(stringOrRegex);
+		}
+		return matchString(stringOrRegex);
 	}
 
 	function not (parser) {
@@ -104,7 +131,7 @@ _ = require("underscore");
 		any: any,
 		not: not,
 		and: and,
-		match: matchString
+		match: match
 	});
 
 })();
