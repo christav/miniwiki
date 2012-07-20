@@ -191,7 +191,13 @@ describe("Parser utils", function () {
             result.result[0].text.should.equal('one');
             result.result[1].text.should.equal('two');            
         });
-    });
 
+        it("should not match if second one doesn't match", function () {
+            var parser = peg.seq(peg.match('one'), peg.match('two'));
+            var result = parser({ text: "onethreeFive", index: 0});
+
+            result.matched.should.be.false;
+        });
+    });
 
 });
