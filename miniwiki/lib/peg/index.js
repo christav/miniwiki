@@ -82,9 +82,28 @@ _ = require("underscore");
 		}
 	}
 
+	function and(parser) {
+		// Parser generator function that returns a new parser that matches
+		// whatever the inner parser is, but does not consume any characters.
+		// Implements the PEG & operator.
+		return function (input) {
+			var result = parser(input);
+			if (result.matched) {
+				return {
+					matched: true,
+					text: result.text,
+					consumed: 0,
+					result: result.result
+				};
+			}
+			return result;
+		}
+	}
+
 	_.extend(exports, {
 		any: any,
 		not: not,
+		and: and,
 		matchString: matchString
 	});
 
