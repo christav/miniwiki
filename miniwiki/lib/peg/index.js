@@ -195,13 +195,33 @@ _ = require("underscore");
 			};
 		});
 	}
+
+	function firstOf() {
+		// alternation operator - returns a parser that matches if any of
+		// the subparsers match at the current index
+		var parsers = Array.prototype.slice.call(arguments, 0);
+
+		return makeParser(function (input) {
+			var result;
+			for(var i = 0, length = parsers.length; i < length; ++i)
+			{
+				result = parsers[i](input);
+				if(result.matched) {
+					return result;
+				}
+			};
+			return failedResult;
+		});
+	}
+
 	_.extend(exports, {
 		any: any,
 		end: end,
 		not: not,
 		and: and,
 		match: match,
-		seq: seq
+		seq: seq,
+		firstOf: firstOf
 	});
 
 })();

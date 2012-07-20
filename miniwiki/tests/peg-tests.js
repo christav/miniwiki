@@ -214,5 +214,28 @@ describe("Parser utils", function () {
             var parser = peg.firstOf(peg.match('one'), peg.match('two'), peg.match('three'));
             parser({text: "one two three", index: 0}).matched.should.be.true;
         });
+
+        it('should match if second expression matches', function () {
+            var parser = peg.firstOf(peg.match('one'), peg.match('two'), peg.match('three'));
+            var result = parser({text:"two three one", index: 0});
+            result.matched.should.be.true;
+            result.text.should.equal("two");
+            result.consumed.should.equal(3);
+        });
+
+        it('should not match if no expression matches', function () {
+            var parser = peg.firstOf(peg.match('one'), peg.match('two'), peg.match('three'));
+            parser({text:"four shut the door", index: 0}).matched.should.be.false;            
+        });
+
+        it('should invoke callback on successful match', function () {
+            var called = false;
+
+            var parser = peg.firstOf(peg.match('one'), peg.match('two'), peg.match('three'))
+                .then(function () { called = true; });
+
+            parser({text: "three and more", index: 0});
+            called.should.be.true;
+        });
     });
 });
