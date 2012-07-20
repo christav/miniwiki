@@ -238,4 +238,24 @@ describe("Parser utils", function () {
             called.should.be.true;
         });
     });
+
+    // describe('zeroOrMore operator', function () {
+    //     it('should match when there is no match', function () {
+    //         var parser = peg.match("abc").zeroOrMore();
+    //         var result = parser({text: "xyz", index: 0});
+
+    //         result.matched.should.be.true;
+    //         result.consumed.should.equal(0);
+    //         result.text.should.equal("");
+    //     });
+
+    //     it('should match where there are multiple matches', function () {
+    //         var parser = peg.match('ab').zeroOrMore();
+    //         var result = parser({text: "ababababcab", index: 0});
+
+    //         result.matched.should.be.true;
+    //         result.text.should.equal("abababab");
+    //         result.consumed.should.equal(8);
+    //     });
+    // });
 });

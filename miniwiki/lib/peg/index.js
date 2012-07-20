@@ -37,8 +37,8 @@ _ = require("underscore");
         return parseResult;
     }
 
-    function makeParser(parseFunction) {
-        parseFunction.then = function (callback) {
+    function makeThenFunction(parseFunction) {
+    	return function (callback) {
             return function (input) {
                 var result = parseFunction(input);
                 if(result.matched) {
@@ -46,7 +46,16 @@ _ = require("underscore");
                 }
                 return result;
             };
+    	};
+    }
+
+    function makeParser(parseFunction) {
+        parseFunction.then = makeThenFunction(parseFunction);
+
+        parseFunction.zeroOrMore = function (input) {
+
         };
+
         return parseFunction;
     }
 
