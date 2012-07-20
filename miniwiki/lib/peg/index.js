@@ -29,22 +29,42 @@ _ = require("underscore");
 	// A reusable "match failed" result
 	var failedResult = { matched: false, consumed: 0 };
 
+	function matchedResult(parseResult, callback) {
+		// helper function to pass result to callback, if any
+		if (callback) {
+			callback(parseResult);
+		}
+		return parseResult;
+	}
 
-	function any(input) {
+	function any(input, callback) {
 		// The '.' operator, matches any single character except end of string
 		if (input.index < input.text.length) {
-			return {
+			return matchedResult({
 				matched: true,
 				text: input.text.charAt(input.index),
 				consumed: 1,
 				result: null
-			};
+			}, callback);
 		} else {
 			return failedResult;
 		}
 	}
 
-	function matchString(stringToMatch) {
+	function end(input, callback) {
+		// parse function that matches the end of input
+		if (input.index === input.text.length) {
+			return matchedResult({
+				matched: true,
+				text: "",
+				consumed: 0,
+				result: null
+			}, callback);
+		}
+		return failedResult;
+	}
+
+	function matchString(stringToMatch, callback) {
 		// A parser generator function - returns a parser function that matches the
 		// supplied string
 		var matchLength = stringToMatch.length;
@@ -53,19 +73,19 @@ _ = require("underscore");
 			if (input.text.length - input.index >= matchLength) {
 				inputSubstring = input.text.substr(input.index, matchLength);
 				if (inputSubstring === stringToMatch) {
-					return {
+					return matchedResult({
 						matched: true,
 						text: inputSubstring,
 						consumed: matchLength,
 						result: null
-					};
+					}, callback);
 				}
 			}
 			return failedResult;
 		}
 	}
 
-	function matchRegex(regex) {
+	function matchRegex(regex, callback) {
 		// A parser generator function that matches the given regex at the current
 		// location in the text
 		return function (input) {
@@ -74,25 +94,25 @@ _ = require("underscore");
 				return failedResult;
 			}
 
-			return {
+			return matchedResult({
 				matched: true,
 				text: matches[0],
 				consumed: matches[0].length,
 				result: null
-			};
+			}, callback);
 		}
 	}
 
-	function match(stringOrRegex) {
+	function match(stringOrRegex, callback) {
 		// "overloaded" function that figures out wether to call
 		// matchString or matchRegex based on the type passed in.
 		if (_.isRegExp(stringOrRegex)) {
-			return matchRegex(stringOrRegex);
+			return matchRegex(stringOrRegex, callback);
 		}
-		return matchString(stringOrRegex);
+		return matchString(stringOrRegex, callback);
 	}
 
-	function not (parser) {
+	function not (parser, callback) {
 		// Parser generator that returns a new parser that matches if the passed in
 		// parser does NOT match. Does not consume any input.
 		return function (input) {
@@ -100,12 +120,12 @@ _ = require("underscore");
 			if (result.matched) {
 				return failedResult;
 			}
-			return {
+			return matchedResult({
 				matched: true,
 				text: "",
 				consumed: 0,
 				result: null
-			};
+			}, callback);
 		}
 	}
 
@@ -129,6 +149,7 @@ _ = require("underscore");
 
 	_.extend(exports, {
 		any: any,
+		end: end,
 		not: not,
 		and: and,
 		match: match
