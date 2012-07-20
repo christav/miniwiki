@@ -24,9 +24,9 @@
 // Text <- (!EOL .)+
 // CapWord <- InitialCap lowercase+
 // BoldDelim <- "*"
-// BoldEnd <- BoldDelim / EOL / END
+// BoldEnd <- BoldDelim / &EOL / &END
 // ItalicsDelim <- "/"
-// ItalicsEnd <- ItalicDelim / EOL / END
+// ItalicsEnd <- ItalicDelim / &EOL / &END
 // H1 <- "!!!!"
 // H2 <- "!!!"
 // H3 <- "!!"
