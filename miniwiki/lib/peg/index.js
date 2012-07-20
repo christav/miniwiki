@@ -104,7 +104,7 @@ _ = require("underscore");
 		any: any,
 		not: not,
 		and: and,
-		matchString: matchString
+		match: matchString
 	});
 
 })();

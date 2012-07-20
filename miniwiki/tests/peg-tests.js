@@ -19,17 +19,17 @@ describe("Parser utils", function () {
 
     describe("match string", function () {
         it('should match the string given', function () {
-            var parser = peg.matchString('bc');
+            var parser = peg.match('bc');
             parser({text: "abc", index: 1}).matched.should.be.true;
         });
 
         it("should not match if string isn't matched", function () {
-            var parser = peg.matchString('ac');
+            var parser = peg.match('ac');
             parser({text: "abc", index: 1}).matched.should.be.false;
         });
 
         it("should not match if string isn't matched at current location", function () {
-            var parser = peg.matchString("bc");
+            var parser = peg.match("bc");
             parser({text: "abc", index: 0}).matched.should.be.false;
         });
     });
@@ -41,7 +41,7 @@ describe("Parser utils", function () {
         });
 
         it('should fail match if string matches', function () {
-            var parser = peg.not(peg.matchString('bc'));
+            var parser = peg.not(peg.match('bc'));
             parser({text: "abc", index: 1}).matched.should.be.false;
         });
     });
@@ -58,12 +58,12 @@ describe("Parser utils", function () {
         });
 
         it('should still match even when not consuming', function () {
-            var parser = peg.and(peg.matchString("bc"));
+            var parser = peg.and(peg.match("bc"));
             parser({text: "abcde", index: 1}).text.should.equal("bc");
         });
-        
+
         it('should not match if inner parser doesn\'t match', function () {
-            var parser = peg.and(peg.matchString("bc"));
+            var parser = peg.and(peg.match("bc"));
             parser({text: "qed", index: 0}).matched.should.be.false;
         });
     });
