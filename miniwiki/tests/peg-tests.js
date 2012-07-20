@@ -206,6 +206,13 @@ describe("Parser utils", function () {
 
             called.should.be.true;
         });
+    });
 
+    describe('firstOf operator', function () {
+
+        it('should match if first expression matches', function () {
+            var parser = peg.firstOf(peg.match('one'), peg.match('two'), peg.match('three'));
+            parser({text: "one two three", index: 0}).matched.should.be.true;
+        });
     });
 });
