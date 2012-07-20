@@ -14,7 +14,7 @@
   },
   "scripts": {
     "start": "node app",
-    "test" : "mocha tests/tests.js -R list"
+    "test" : "mocha tests/tests.js tests/peg-tests.js -R list"
 
   }
 }

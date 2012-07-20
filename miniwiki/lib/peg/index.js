@@ -22,6 +22,8 @@
 // }
 //
 
+_ = require("underscore");
+
 (function () {
 
 	// A reusable "match failed" result
@@ -80,7 +82,10 @@
 		}
 	}
 
-	exports.any = any;
-	exports.not = not;
-	exports.matchString = matchString;
+	_.extend(exports, {
+		any: any,
+		not: not,
+		matchString: matchString
+	});
+
 })();
