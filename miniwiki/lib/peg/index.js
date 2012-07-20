@@ -37,6 +37,19 @@ _ = require("underscore");
 		return parseResult;
 	}
 
+	anyParser.then = thenSuccessCallback(anyParser);
+
+	function thenSuccessCallback(parserFunction) {
+		parserFunction.then = function (callback) {}
+			return function (input) {
+			var result = parserFunction(input);
+			if(result.matched) {
+				callback(result);
+			}
+			return result;
+		}
+	}
+
 	function anyParser(input) {
 		// The '.' operator, matches any single character except end of string
 		if (input.index < input.text.length) {
@@ -51,21 +64,13 @@ _ = require("underscore");
 		}
 	}
 
-	anyParser.then = function (callback) {
-		return function (input) {
-			var result = anyParser(input);
-			if(result.matched) {
-				callback(result);
-			}
-			return result;
-		}
-	}
+	thenSuccessCallback(anyParser);
 
 	function any() {
 		return anyParser;
 	}
 
-	function end(input, callback) {
+	function endParser(input) {
 		// parse function that matches the end of input
 		if (input.index === input.text.length) {
 			return matchedResult({
@@ -77,6 +82,12 @@ _ = require("underscore");
 		}
 		return failedResult;
 	}
+
+	function end() {
+		return endParser;
+	}
+
+	thenSuccessCallback(endParser);
 
 	function matchString(stringToMatch, callback) {
 		// A parser generator function - returns a parser function that matches the
