@@ -168,12 +168,40 @@ _ = require("underscore");
 		});
 	}
 
+	function seq() {
+		// sequence operator - returns a parser that matches all the parsers
+		// passed in via arguments
+		var parsers = Array.prototype.slice.call(arguments, 0);
+		return makeParser(function (input) {
+			var currentInput
+			var internalInput = {
+				text: input.text,
+				index: input.index
+			};
+			var results = [];
+			var result;
+			for(var i = 0, length = parsers.length; i < length; ++i) {
+				result = parsers[i](internalInput);
+				if(!result.matched) { return failedResult; }
+				results.push(result);
+				internalInput.index += result.consumed;
+			}
+
+			return {
+				matched: true,
+				text: input.text.substring(input.index, internalInput.index),
+				consumed: internalInput.index - input.index,
+				result: results
+			};
+		});
+	}
 	_.extend(exports, {
 		any: any,
 		end: end,
 		not: not,
 		and: and,
-		match: match
+		match: match,
+		seq: seq
 	});
 
 })();

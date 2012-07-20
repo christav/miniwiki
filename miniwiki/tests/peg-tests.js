@@ -161,4 +161,37 @@ describe("Parser utils", function () {
             called.should.be.true;
         });
     });
+
+    describe("sequence operator", function () {
+        it('should match two in order', function () {
+            var parser = peg.seq(peg.match('one'), peg.match("two"));
+            var result = parser({text: "onetwo", index: 0});
+
+            result.matched.should.be.true;
+        });
+
+        it('should match the entire string', function () {
+            var parser = peg.seq(peg.match('one'), peg.match("two"));
+            var result = parser({text: "onetwo", index: 0});
+
+            result.text.should.equal("onetwo");
+        });
+
+        it('should consume entire matched string from input', function () {
+            var parser = peg.seq(peg.match('one'), peg.match('two'));
+            var result = parser({ text: "onetwo", index: 0});
+
+            result.consumed.should.equal(6);
+        });
+
+        it('should include results of each internal match in results', function () {
+            var parser = peg.seq(peg.match('one'), peg.match('two'));
+            var result = parser({ text: "onetwo", index: 0});
+
+            result.result[0].text.should.equal('one');
+            result.result[1].text.should.equal('two');            
+        });
+    });
+
+
 });
