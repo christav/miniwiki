@@ -47,18 +47,18 @@ describe("Parser utils", function () {
     describe("match end", function () {
 
         it('should match at end of input', function () {
-            var result = peg.end({text: "abc", index: 3});
+            var result = peg.end()({text: "abc", index: 3});
             result.matched.should.be.true;
         });
 
         if('should not match when not at end', function () {
-            var result = peg.end({text: "abcd", index: 2});
+            var result = peg.end()({text: "abcd", index: 2});
             result.matched.should.be.false;
         });
 
         it('should invoke callback on match', function () {
             var called = false;
-            peg.end({text: "", index: 0}, function () { called = true; });
+            peg.end().then(function () { called = true; })({text: "", index: 0});
             called.should.be.true;
         });
     });
@@ -81,7 +81,7 @@ describe("Parser utils", function () {
 
         it("should invoke callback on match", function () {
             var called = false;
-            peg.match("ab", function (parseResult) { called = true; })({ text: "abc", index: 0});
+            peg.match("ab").then(function (parseResult) { called = true; })({ text: "abc", index: 0});
             called.should.be.true;
         });
     });
@@ -109,7 +109,7 @@ describe("Parser utils", function () {
 
         it("should invoke callback on successful match", function () {
             var called = false;
-            peg.match(/[ab]/, function (parseResult) { called = true; })( { text: "abcd", index: 0 } );
+            peg.match(/[ab]/).then(function (parseResult) { called = true; })( { text: "abcd", index: 0 } );
             called.should.be.true;
         });
     })
@@ -128,7 +128,7 @@ describe("Parser utils", function () {
 
         it('should invoke callback on successful match', function () {
             var called = false;
-            peg.not(peg.any(), function () { called = true; })({ text: "abc", index: 3 });
+            peg.not(peg.any()).then(function () { called = true; })({ text: "abc", index: 3 });
             called.should.be.true;
         });
     });
@@ -152,6 +152,13 @@ describe("Parser utils", function () {
         it('should not match if inner parser doesn\'t match', function () {
             var parser = peg.and(peg.match("bc"));
             parser({text: "qed", index: 0}).matched.should.be.false;
+        });
+
+        it('should invoke callback on successful match', function () {
+            var called = false;
+            var parser = peg.and(peg.match("bc")).then(function () { called = true; });
+            parser({text: "abcde", index:1});
+            called.should.be.true;
         });
     });
 });

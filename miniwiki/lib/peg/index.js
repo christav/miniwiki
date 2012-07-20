@@ -37,20 +37,20 @@ _ = require("underscore");
 		return parseResult;
 	}
 
-	anyParser.then = thenSuccessCallback(anyParser);
-
-	function thenSuccessCallback(parserFunction) {
-		parserFunction.then = function (callback) {}
+	function makeParser(parseFunction) {
+		parseFunction.then = function (callback) {
 			return function (input) {
-			var result = parserFunction(input);
-			if(result.matched) {
-				callback(result);
-			}
-			return result;
-		}
+				var result = parseFunction(input);
+				if(result.matched) {
+					callback(result);
+				}
+				return result;
+			};
+		};
+		return parseFunction;
 	}
 
-	function anyParser(input) {
+	var anyParser = makeParser(function (input) {
 		// The '.' operator, matches any single character except end of string
 		if (input.index < input.text.length) {
 			return {
@@ -62,103 +62,99 @@ _ = require("underscore");
 		} else {
 			return failedResult;
 		}
-	}
-
-	thenSuccessCallback(anyParser);
+	});
 
 	function any() {
 		return anyParser;
 	}
 
-	function endParser(input) {
+	var endParser = makeParser(function (input) {
 		// parse function that matches the end of input
 		if (input.index === input.text.length) {
-			return matchedResult({
+			return {
 				matched: true,
 				text: "",
 				consumed: 0,
 				result: null
-			}, callback);
+			};
 		}
 		return failedResult;
-	}
+	});
 
 	function end() {
 		return endParser;
 	}
 
-	thenSuccessCallback(endParser);
-
-	function matchString(stringToMatch, callback) {
+	function matchString(stringToMatch) {
 		// A parser generator function - returns a parser function that matches the
 		// supplied string
 		var matchLength = stringToMatch.length;
-		return function (input) {
+		return makeParser(function (input) {
 			var inputSubstring;
 			if (input.text.length - input.index >= matchLength) {
 				inputSubstring = input.text.substr(input.index, matchLength);
 				if (inputSubstring === stringToMatch) {
-					return matchedResult({
+					return {
 						matched: true,
 						text: inputSubstring,
 						consumed: matchLength,
 						result: null
-					}, callback);
+					};
 				}
 			}
 			return failedResult;
-		}
+		});
 	}
 
-	function matchRegex(regex, callback) {
+	function matchRegex(regex) {
 		// A parser generator function that matches the given regex at the current
 		// location in the text
-		return function (input) {
+		return makeParser(function (input) {
 			var matches = input.text.substring(input.index).match(regex);
 			if (matches === null || matches.index !== 0) {
 				return failedResult;
 			}
 
-			return matchedResult({
+			return {
 				matched: true,
 				text: matches[0],
 				consumed: matches[0].length,
 				result: null
-			}, callback);
-		}
+			};
+		});
 	}
 
-	function match(stringOrRegex, callback) {
+	function match(stringOrRegex) {
 		// "overloaded" function that figures out wether to call
 		// matchString or matchRegex based on the type passed in.
 		if (_.isRegExp(stringOrRegex)) {
-			return matchRegex(stringOrRegex, callback);
+			return matchRegex(stringOrRegex);
 		}
-		return matchString(stringOrRegex, callback);
+		return matchString(stringOrRegex);
 	}
 
-	function not (parser, callback) {
+	function not (parser) {
 		// Parser generator that returns a new parser that matches if the passed in
 		// parser does NOT match. Does not consume any input.
-		return function (input) {
+		return makeParser(function (input) {
 			var result = parser(input);
 			if (result.matched) {
 				return failedResult;
 			}
-			return matchedResult({
+			return {
 				matched: true,
 				text: "",
 				consumed: 0,
 				result: null
-			}, callback);
-		}
+			};
+		});
 	}
 
 	function and(parser) {
 		// Parser generator function that returns a new parser that matches
 		// whatever the inner parser is, but does not consume any characters.
 		// Implements the PEG & operator.
-		return function (input) {
+		return makeParser(function (input) {
 			var result = parser(input);
 			if (result.matched) {
 				return {
@@ -169,7 +165,7 @@ _ = require("underscore");
 				};
 			}
 			return result;
-		}
+		});
 	}
 
 	_.extend(exports, {
