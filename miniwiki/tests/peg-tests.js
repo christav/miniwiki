@@ -200,4 +200,11 @@ describe("Parser utils", function () {
         });
     });
 
+    it('should invoke callback on match', function () {
+        var called = false;
+        var parser = peg.seq(peg.match('one'), peg.match('two')).then(function () { called = true; });
+        parser({ text: "onetwo", index: 0});
+
+        called.should.be.true;
+    });
 });
