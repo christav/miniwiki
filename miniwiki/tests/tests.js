@@ -10,20 +10,22 @@ describe("Libraries", function () {
     });
 });
 
-describe("Wiki Markup", function () {
-    describe("plain text", function () {
-        it("should return a text node", function () {
-            var result = wiki.parse("plain text");
-            result.should.be.a("object");
-            result.should.have.property("render");
+describe("Wiki Markup parser", function () {
+    describe("EOL", function () {
+        it('should match end of line', function () {
+            wiki.parsers.eol({ text: "\r\n", index: 0}).matched.should.be.true;
         });
 
-        it("should render as itself", function () {
-            var source = "some plain text";
-            wiki.parse(source).render().should.equal(source);
+        it('should not match not end of line', function () {
+            wiki.parsers.eol({text: "something", index: 5}).matched.should.be.false;
         });
 
-    });
+        it('should match end of input without consuming anything', function () {
+            var result = wiki.parsers.eol({ text: "something", index: "something".length});
+            result.matched.should.be.true;
+            result.consumed.should.equal(0);
+        });
+    })
 });
 
 
