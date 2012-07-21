@@ -49,12 +49,33 @@ _ = require("underscore");
     	};
     }
 
+    function makeZeroOrMoreFunction(parseFunction) {
+    	return function () {
+    		var zeroOrMoreFunction = function (input) {
+    			var internalInput = {
+    				text: input.text,
+    				index: input.index
+    			};
+    			var result = parseFunction(internalInput);
+    			while(result.matched) {
+    				internalInput.index += result.consumed;
+    				result = parseFunction(internalInput);
+    			}
+    			return {
+    				matched: true,
+    				text: input.text.substring(input.index, internalInput.index),
+    				consumed: internalInput.index - input.index,
+    				result: null
+    			};
+    		};
+    		zeroOrMoreFunction.then = makeThenFunction(zeroOrMoreFunction);
+    		return zeroOrMoreFunction;
+    	};
+    }
+
     function makeParser(parseFunction) {
         parseFunction.then = makeThenFunction(parseFunction);
-
-        parseFunction.zeroOrMore = function (input) {
-
-        };
+        parseFunction.zeroOrMore = makeZeroOrMoreFunction(parseFunction);
 
         return parseFunction;
     }
