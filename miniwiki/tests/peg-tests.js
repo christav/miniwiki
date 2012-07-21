@@ -268,4 +268,36 @@ describe("Parser utils", function () {
         });
     });
 
+    describe("oneOrMore operator", function () {
+
+        it('should match when there is multiple matches', function () {
+            var parser = peg.match(/[0-9]/).oneOrMore();
+            var result = parser({text: "867-5309", index: 0});
+            result.matched.should.be.true;
+            result.text.should.equal("867");
+            result.consumed.should.equal(3);
+        });
+
+        it('should match when there is one match', function () {
+            var parser = peg.match(/[0-9]/).oneOrMore();
+            var result = parser({text: "1 2 buckle your shoe", index: 0});
+            result.matched.should.be.true;
+            result.text.should.equal("1");
+            result.consumed.should.equal(1);
+        });
+
+        it("should not match when there's no match", function () {
+            var parser = peg.match(/[0-9]/).oneOrMore();
+            var result = parser({text: "The number is 8675309", index: 0});
+
+            result.matched.should.be.false;
+        });
+
+        it('should invoke callback on successful match', function () {
+            var called = false;
+            var parser = peg.match(/[0-9]/).oneOrMore().then(function () { called = true; })
+            parser({ text: "43", index: 1});
+            called.should.be.true;
+        })
+    });
 });
