@@ -8,17 +8,17 @@
 //
 // Input is an object of the form:
 // {
-//        text: "Full string to parse",
-//        index: indexToStartParsing
+//     text: "Full string to parse",
+//     index: indexToStartParsing
 // }
 //
 // parseResult is an object of the form:
 //
 // {
-//        matched: boolean true if parse matched, false if it didn't
-//      text: If matched, this is the string that was matched
-//      consumed: numberOfCharactersConsumedByTheParse
-//        result: "optional object carrying extra parse information"
+//     matched: boolean true if parse matched, false if it didn't
+//     text: If matched, this is the string that was matched
+//     consumed: numberOfCharactersConsumedByTheParse
+//     result: "optional object carrying extra parse information"
 // }
 //
 
@@ -223,10 +223,20 @@ _ = require("underscore");
                 matched: true,
                 text: input.text.substring(input.index, internalInput.index),
                 consumed: internalInput.index - input.index,
-                result: null
+                result: results
             };
         };
         return oneOrMoreFunction;
+    }
+
+    function onMatch(parser, callback) {
+        return function (input) {
+            var result = parser(input);
+            if(result.matched) {
+                callback(result);
+            }
+            return result;
+        };
     }
 
     _.extend(exports, {
@@ -238,7 +248,8 @@ _ = require("underscore");
         seq: seq,
         firstOf: firstOf,
         zeroOrMore: zeroOrMore,
-        oneOrMore: oneOrMore
+        oneOrMore: oneOrMore,
+        onMatch: onMatch
     });
 
 })();

@@ -211,5 +211,41 @@ describe("Parser utils", function () {
 
             result.matched.should.be.false;
         });
+
+    describe('onMatch operator', function () {
+
+        it('should invoke callback on successful match with result', function () {
+            var expectedResult = {
+                matched: true,
+                text: "some text",
+                consumed: "some text".length,
+                result: null
+            };
+
+            peg.onMatch(function (input) {
+                return expectedResult;
+            }, function (result) {
+                result.callbackWasInvoked = true;
+            })();
+
+            should.exist(expectedResult.callbackWasInvoked);
+            expectedResult.callbackWasInvoked.should.be.true;
+        });
+
+        it('should not invoke callback on failed match', function () {
+            var expectedResult = {
+                matched: false,
+                consumed: 0,
+                result: null
+            };
+
+            peg.onMatch(function (input) {
+                return expectedResult;
+            }, function (result) {
+                result.callbackWasInvoked = true;
+            })();
+
+            should.not.exist(expectedResult.callbackWasInvoked);
+        });
     });
 });
