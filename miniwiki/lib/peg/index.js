@@ -41,9 +41,9 @@ _ = require("underscore");
         } else {
             return failedResult;
         }
-    };
+    }
 
-    var endParser = function (input) {
+    function end(input) {
         // parse function that matches the end of input
         if (input.index === input.text.length) {
             return {
@@ -54,10 +54,6 @@ _ = require("underscore");
             };
         }
         return failedResult;
-    };
-
-    function end() {
-        return endParser;
     }
 
     function matchString(stringToMatch) {

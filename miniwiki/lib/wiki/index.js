@@ -37,7 +37,7 @@ var eol, whitespace, spacing, lowercase, initialCap,
 	link, italics, bold, inlineContent, paragraph,
 	headerIntro, header, block, htmlText;
 
-eol = peg.firstOf(peg.match("\r\n"), peg.match("\n"), peg.end());
+eol = peg.firstOf(peg.match("\r\n"), peg.match("\n"), peg.end);
 whitespace = peg.firstOf(peg.match(" "), peg.match("\t"));
 spacing = peg.zeroOrMore(whitespace);
 lowercase = peg.match(/[a-z]/);

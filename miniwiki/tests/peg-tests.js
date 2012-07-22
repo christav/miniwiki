@@ -24,12 +24,12 @@ describe("Parser utils", function () {
     describe("match end", function () {
 
         it('should match at end of input', function () {
-            var result = peg.end()({text: "abc", index: 3});
+            var result = peg.end({text: "abc", index: "abc".length});
             result.matched.should.be.true;
         });
 
         if('should not match when not at end', function () {
-            var result = peg.end()({text: "abcd", index: 2});
+            var result = peg.end({text: "abcd", index: 2});
             result.matched.should.be.false;
         });
     });
