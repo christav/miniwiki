@@ -29,7 +29,7 @@ _ = require("underscore");
     // A reusable "match failed" result
     var failedResult = { matched: false, consumed: 0 };
 
-    var anyParser = function (input) {
+    function any(input) {
         // The '.' operator, matches any single character except end of string
         if (input.index < input.text.length) {
             return {
@@ -42,10 +42,6 @@ _ = require("underscore");
             return failedResult;
         }
     };
-
-    function any() {
-        return anyParser;
-    }
 
     var endParser = function (input) {
         // parse function that matches the end of input

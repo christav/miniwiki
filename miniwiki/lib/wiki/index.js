@@ -50,7 +50,7 @@ boldEnd = peg.firstOf(peg.match("*"), peg.and(eol));
 capWord = peg.seq(initialCap, peg.oneOrMore(lowercase));
 text = peg.oneOrMore(peg.seq(
 	peg.not(peg.seq(eol, bold, italics, link)),
-	peg.any()
+	peg.any
 	));
 link = peg.seq(capWord, peg.oneOrMore(capWord));
 italics = peg.seq(peg.match('/'), peg.oneOrMore(peg.seq(peg.not(italicsEnd), inlineContent)), italicsEnd);
