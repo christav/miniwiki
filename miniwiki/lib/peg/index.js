@@ -29,24 +29,7 @@ _ = require("underscore");
     // A reusable "match failed" result
     var failedResult = { matched: false, consumed: 0 };
 
-    function makeThenFunction(parseFunction) {
-    	return function (callback) {
-            return function (input) {
-                var result = parseFunction(input);
-                if(result.matched) {
-                    callback(result);
-                }
-                return result;
-            };
-    	};
-    }
-
-    function makeParser(parseFunction) {
-        parseFunction.then = makeThenFunction(parseFunction);
-        return parseFunction;
-    }
-
-    var anyParser = makeParser(function (input) {
+    var anyParser = function (input) {
         // The '.' operator, matches any single character except end of string
         if (input.index < input.text.length) {
             return {
@@ -58,13 +41,13 @@ _ = require("underscore");
         } else {
             return failedResult;
         }
-    });
+    };
 
     function any() {
         return anyParser;
     }
 
-    var endParser = makeParser(function (input) {
+    var endParser = function (input) {
         // parse function that matches the end of input
         if (input.index === input.text.length) {
             return {
@@ -75,7 +58,7 @@ _ = require("underscore");
             };
         }
         return failedResult;
-    });
+    };
 
     function end() {
         return endParser;
@@ -85,7 +68,7 @@ _ = require("underscore");
         // A parser generator function - returns a parser function that matches the
         // supplied string
         var matchLength = stringToMatch.length;
-        return makeParser(function (input) {
+        return function (input) {
             var inputSubstring;
             if (input.text.length - input.index >= matchLength) {
                 inputSubstring = input.text.substr(input.index, matchLength);
@@ -99,13 +82,13 @@ _ = require("underscore");
                 }
             }
             return failedResult;
-        });
+        };
     }
 
     function matchRegex(regex) {
         // A parser generator function that matches the given regex at the current
         // location in the text
-        return makeParser(function (input) {
+        return function (input) {
             var matches = input.text.substring(input.index).match(regex);
             if (matches === null || matches.index !== 0) {
                 return failedResult;
@@ -117,7 +100,7 @@ _ = require("underscore");
                 consumed: matches[0].length,
                 result: null
             };
-        });
+        };
     }
 
     function match(stringOrRegex) {
@@ -132,7 +115,7 @@ _ = require("underscore");
     function not (parser) {
         // Parser generator that returns a new parser that matches if the passed in
         // parser does NOT match. Does not consume any input.
-        return makeParser(function (input) {
+        return function (input) {
             var result = parser(input);
             if (result.matched) {
                 return failedResult;
@@ -143,14 +126,14 @@ _ = require("underscore");
                 consumed: 0,
                 result: null
             };
-        });
+        };
     }
 
     function and(parser) {
         // Parser generator function that returns a new parser that matches
         // whatever the inner parser is, but does not consume any characters.
         // Implements the PEG & operator.
-        return makeParser(function (input) {
+        return function (input) {
             var result = parser(input);
             if (result.matched) {
                 return {
@@ -161,14 +144,14 @@ _ = require("underscore");
                 };
             }
             return result;
-        });
+        };
     }
 
     function seq() {
         // sequence operator - returns a parser that matches all the parsers
         // passed in via arguments
         var parsers = Array.prototype.slice.call(arguments, 0);
-        return makeParser(function (input) {
+        return function (input) {
             var currentInput
             var internalInput = {
                 text: input.text,
@@ -189,7 +172,7 @@ _ = require("underscore");
                 consumed: internalInput.index - input.index,
                 result: results
             };
-        });
+        };
     }
 
     function firstOf() {
@@ -197,7 +180,7 @@ _ = require("underscore");
         // the subparsers match at the current index
         var parsers = Array.prototype.slice.call(arguments, 0);
 
-        return makeParser(function (input) {
+        return function (input) {
             var result;
             for(var i = 0, length = parsers.length; i < length; ++i)
             {
@@ -207,7 +190,7 @@ _ = require("underscore");
                 }
             };
             return failedResult;
-        });
+        };
     }
 
     function zeroOrMore(parseFunction) {
@@ -228,7 +211,6 @@ _ = require("underscore");
                 result: null
             };
         };
-        zeroOrMoreFunction.then = makeThenFunction(zeroOrMoreFunction);
         return zeroOrMoreFunction;
     }
 
@@ -252,7 +234,6 @@ _ = require("underscore");
                 result: null
             };
         };
-        oneOrMoreFunction.then = makeThenFunction(oneOrMoreFunction);
         return oneOrMoreFunction;
     }
 

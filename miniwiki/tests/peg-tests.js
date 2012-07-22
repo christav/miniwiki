@@ -19,29 +19,6 @@ describe("Parser utils", function () {
         it('should not match if all characters have been consumed', function () {
             peg.any()({text: "abc", index: 3}).should.have.property("matched", false);
         });
-
-        it('should invoke callback on successful match', function () {
-            var called = false;
-            peg.any().then(function (parseResult) {
-                called = true;
-            })({ text: "qed", index: 0});
-            called.should.be.true;
-        });
-
-        it('should not invoke callback on failed match', function () {
-            var called = false;
-            peg.any().then(function (parseResult) {
-                called = true;
-            })({ text: "", index: 0});
-            called.should.be.false;
-        });
-
-        it('should let callback set the parse result', function () {
-            var result = peg.any().then(function (parseResult) {
-                parseResult.result = "this is my new result";
-            })({ text: "this is some text", index: 2});
-            result.result.should.equal("this is my new result");
-        });
     });
 
     describe("match end", function () {
@@ -54,12 +31,6 @@ describe("Parser utils", function () {
         if('should not match when not at end', function () {
             var result = peg.end()({text: "abcd", index: 2});
             result.matched.should.be.false;
-        });
-
-        it('should invoke callback on match', function () {
-            var called = false;
-            peg.end().then(function () { called = true; })({text: "", index: 0});
-            called.should.be.true;
         });
     });
 
@@ -77,12 +48,6 @@ describe("Parser utils", function () {
         it("should not match if string isn't matched at current location", function () {
             var parser = peg.match("bc");
             parser({text: "abc", index: 0}).matched.should.be.false;
-        });
-
-        it("should invoke callback on match", function () {
-            var called = false;
-            peg.match("ab").then(function (parseResult) { called = true; })({ text: "abc", index: 0});
-            called.should.be.true;
         });
     });
 
@@ -106,13 +71,7 @@ describe("Parser utils", function () {
             var parser = peg.match(/bcd/);
             parser({ text: "abcdef", index: 1}).consumed.should.equal(3);
         });
-
-        it("should invoke callback on successful match", function () {
-            var called = false;
-            peg.match(/[ab]/).then(function (parseResult) { called = true; })( { text: "abcd", index: 0 } );
-            called.should.be.true;
-        });
-    })
+    });
 
 
     describe("not operator", function () {
@@ -124,12 +83,6 @@ describe("Parser utils", function () {
         it('should fail match if string matches', function () {
             var parser = peg.not(peg.match('bc'));
             parser({text: "abc", index: 1}).matched.should.be.false;
-        });
-
-        it('should invoke callback on successful match', function () {
-            var called = false;
-            peg.not(peg.any()).then(function () { called = true; })({ text: "abc", index: 3 });
-            called.should.be.true;
         });
     });
 
@@ -152,13 +105,6 @@ describe("Parser utils", function () {
         it('should not match if inner parser doesn\'t match', function () {
             var parser = peg.and(peg.match("bc"));
             parser({text: "qed", index: 0}).matched.should.be.false;
-        });
-
-        it('should invoke callback on successful match', function () {
-            var called = false;
-            var parser = peg.and(peg.match("bc")).then(function () { called = true; });
-            parser({text: "abcde", index:1});
-            called.should.be.true;
         });
     });
 
@@ -198,14 +144,6 @@ describe("Parser utils", function () {
 
             result.matched.should.be.false;
         });
-
-        it('should invoke callback on match', function () {
-            var called = false;
-            var parser = peg.seq(peg.match('one'), peg.match('two')).then(function () { called = true; });
-            parser({ text: "onetwo", index: 0});
-
-            called.should.be.true;
-        });
     });
 
     describe('firstOf operator', function () {
@@ -227,28 +165,6 @@ describe("Parser utils", function () {
             var parser = peg.firstOf(peg.match('one'), peg.match('two'), peg.match('three'));
             parser({text:"four shut the door", index: 0}).matched.should.be.false;            
         });
-
-        it('should invoke callback on successful match', function () {
-            var called = false;
-
-            var parser = peg.firstOf(peg.match('one'), peg.match('two'), peg.match('three'))
-                .then(function () { called = true; });
-
-            parser({text: "three and more", index: 0});
-            called.should.be.true;
-        });
-
-        it('should pass back result of first match', function () {
-            var parser = peg.firstOf(
-                peg.match('one').then(function (result) { result.result = "first"; }),
-                peg.match('two').then(function (result) { result.result = 'second'; })
-            );
-
-            var result = parser({text: "twoone", index: 0});
-
-            should.exist(result.result);
-            result.result.should.equal("second");
-        });
     });
 
     describe('zeroOrMore operator', function () {
@@ -268,15 +184,6 @@ describe("Parser utils", function () {
             result.matched.should.be.true;
             result.text.should.equal("abababab");
             result.consumed.should.equal(8);
-        });
-
-        it('should invoke callback on successful match', function() {
-            var called = false;
-
-            var parser = peg.zeroOrMore(peg.match(/[0-9]/)).then(function () { called = true; });
-            parser({ text: "8675309", index: 0});
-
-            called.should.be.true;
         });
     });
 
@@ -304,12 +211,5 @@ describe("Parser utils", function () {
 
             result.matched.should.be.false;
         });
-
-        it('should invoke callback on successful match', function () {
-            var called = false;
-            var parser = peg.oneOrMore(peg.match(/[0-9]/)).then(function () { called = true; })
-            parser({ text: "43", index: 1});
-            called.should.be.true;
-        })
     });
 });

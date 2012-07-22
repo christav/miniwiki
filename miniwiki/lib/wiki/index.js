@@ -51,10 +51,7 @@ capWord = peg.seq(initialCap, peg.oneOrMore(lowercase));
 text = peg.oneOrMore(peg.seq(
 	peg.not(peg.seq(eol, bold, italics, link)),
 	peg.any()
-	))
-	.then(function (result) {
-		result.result = { nodeType: "text" };
-	});
+	));
 link = peg.seq(capWord, peg.oneOrMore(capWord));
 italics = peg.seq(peg.match('/'), peg.oneOrMore(peg.seq(peg.not(italicsEnd), inlineContent)), italicsEnd);
 bold = peg.seq(peg.match('*', peg.oneOrMore(peg.seq(peg.not(boldEnd), inlineContent)), boldEnd));
