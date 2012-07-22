@@ -29,38 +29,156 @@
 // InitialCap <- [A-Z]
 // Lowercase <- [a-z]
 // Spacing <- Whitespace*
-// Whitespace <- "  / "\t"
+// Whitespace <- " " / "\t"
 // EOL <- \r\n / \n / END
 
-var eol, whitespace, spacing, lowercase, initialCap,
-	h3, h2, h1, italicsEnd, boldEnd, capWord, text,
-	link, italics, bold, inlineContent, paragraph,
-	headerIntro, header, block, htmlText;
+function htmlText(input) {
+	var parser = peg.seq(peg.zeroOrMore(block), peg.end);
+	return parser(input);
+}
 
-eol = peg.firstOf(peg.match("\r\n"), peg.match("\n"), peg.end);
-whitespace = peg.firstOf(peg.match(" "), peg.match("\t"));
-spacing = peg.zeroOrMore(whitespace);
-lowercase = peg.match(/[a-z]/);
-initialCap = peg.match(/[A-Z]/);
-h3 = peg.match("!!");
-h2 = peg.match("!!!");
-h1 = peg.match("!!!!");
-italicsEnd = peg.firstOf(peg.match("/"), peg.and(eol));
-boldEnd = peg.firstOf(peg.match("*"), peg.and(eol));
-capWord = peg.seq(initialCap, peg.oneOrMore(lowercase));
-text = peg.oneOrMore(peg.seq(
-	peg.not(peg.seq(eol, bold, italics, link)),
-	peg.any
-	));
-link = peg.seq(capWord, peg.oneOrMore(capWord));
-italics = peg.seq(peg.match('/'), peg.oneOrMore(peg.seq(peg.not(italicsEnd), inlineContent)), italicsEnd);
-bold = peg.seq(peg.match('*', peg.oneOrMore(peg.seq(peg.not(boldEnd), inlineContent)), boldEnd));
-inlineContent = peg.firstOf(bold, italics, link, text);
-paragraph = peg.seq(peg.zeroOrMore(inlineContent), eol);
-headerIntro = peg.seq(peg.firstOf(h1, h2, h3), spacing);
-header = peg.seq(headerIntro, peg.zeroOrMore(inlineContent), eol);
-block = peg.firstOf(header, paragraph);
-htmlText = peg.seq(peg.zeroOrMore(block), peg.end);
+function block(input) {
+	var parser = peg.firstOf(header, paragraph);
+	return parser(input);
+}
+
+function header(input) {
+	var parser = peg.seq(headerInto, peg.zeroOrMore(inlineContent), eol);
+	return parser(input);
+}
+
+function headerIntro(input) {
+	var parser = peg.seq(
+		peg.firstOf(h1, h2, h3),
+		spacing);
+	return parser(input);
+}
+
+function paragraph(input) {
+	var parser = peg.seq(peg.zeroOrMore(inlineContent), eol);
+	return parser(input);
+}
+
+function inlineContent(input) {
+	var parser = peg.firstOf(bold, italics, link, text);
+	return parser(input);
+}
+
+function bold(input) {
+	var parser = peg.seq(boldDelim, 
+		peg.oneOrMore(peg.seq(peg.not(boldEnd), inlineContent)),
+		boldEnd);
+	return parser(input);
+}
+
+function italics(input) {
+	var parser = peg.seq(italicsDelim, 
+		peg.oneOrMore(peg.seq(peg.not(italicsEnd), inlineContent)),
+		italicsEnd);
+	return parser(input);
+}
+
+function link(input) {
+	var parser = peg.seq(capWord, peg.oneOrMore(capWord));
+	return parser(input);
+}
+
+function text(input) {
+	var parser = peg.oneOrMore(
+		peg.seq(
+			peg.not(
+				peg.firstOf(
+					eol, bold, italics, link
+				)
+			), peg.any)
+		);
+	return parser(input);
+}
+
+function capWord(input) {
+	var parser = peg.seq(initialCap, peg.oneOrMore(lowercase));
+	return parser(input);
+}
+
+function boldDelim(input) {
+	var parser = peg.match('*');
+	return parser(input);
+}
+
+function boldEnd(input) {
+	var parser = peg.firstOf(boldDelim, peg.and(eol));
+	return parser(input);
+}
+
+function italicsDelim(input) {
+	var parser = peg.match('/');
+	return parser(input);
+}
+
+function italicsEnd(input) {
+	var parser = peg.firstOf(italicsDelim, peg.and(eol));
+	return parser(input);
+}
+
+function h1(input) {
+	var parser = peg.match("!!!!");
+	return parser(input);
+}
+
+function h2(input) {
+	var parser = peg.match("!!!");
+	return parser(input);
+}
+
+function h3(input) {
+	var parser = peg.match("!!");
+	return parser(input);
+}
+
+function initialCap(input) {
+	var currentChar = input.text.charAt(input.index);
+
+	if("ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(currentChar) !== -1)
+	{
+		return {
+			matched: true,
+			text: currentChar,
+			consumed: 1,
+			result: null
+		};
+	}
+
+	return { matched: false, consumed: 0 };
+}
+
+function lowercase(input) {
+	var parser = peg.not(initialCap);
+	return parser(input);
+}
+
+function spacing(input) {
+	var parser = peg.zeroOrMore(whitespace);
+	return parser(input);
+}
+
+function whitespace(input) {
+	var currentChar = input.text.charAt(input.index);
+	if(currentChar === " " || currentChar === "\t") {
+		return {
+			matched: true,
+			text: currentChar,
+			consumed: 1,
+			result: null
+		};
+	}
+	return { matched: false, consumed: 0 };
+}
+
+function eol(input) {
+	var parser = peg.firstOf(peg.match("\r\n"), peg.match("\n"), peg.end);
+	return parser(input);
+}
+
 
 	_.extend(exports, {
 		parsers: {
@@ -73,7 +191,9 @@ htmlText = peg.seq(peg.zeroOrMore(block), peg.end);
 			h2 : h2,
 			h1 : h1,
 			italicsEnd: italicsEnd,
+			italicsDelim: italicsDelim,
 			boldEnd: boldEnd,
+			boldDelim: boldDelim,
 			capWord: capWord,
 			text: text,
 			link: link,
