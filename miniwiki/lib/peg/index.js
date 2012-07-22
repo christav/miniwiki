@@ -191,8 +191,10 @@ _ = require("underscore");
                 text: input.text,
                 index: input.index
             };
+            var results = [];
             var result = parseFunction(internalInput);
             while(result.matched) {
+                results.push(result);
                 internalInput.index += result.consumed;
                 result = parseFunction(internalInput);
             }
@@ -200,7 +202,7 @@ _ = require("underscore");
                 matched: true,
                 text: input.text.substring(input.index, internalInput.index),
                 consumed: internalInput.index - input.index,
-                result: null
+                result: results
             };
         };
         return zeroOrMoreFunction;
@@ -212,10 +214,12 @@ _ = require("underscore");
                 text: input.text,
                 index: input.index
             };
+            var results = [];
             var result = parseFunction(internalInput);
             if(!result.matched) { return failedResult; }
             
             while(result.matched) { 
+                results.push(result);
                 internalInput.index += result.consumed;
                 result = parseFunction(internalInput);
             }

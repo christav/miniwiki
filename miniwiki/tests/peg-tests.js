@@ -165,6 +165,17 @@ describe("Parser utils", function () {
             var parser = peg.firstOf(peg.match('one'), peg.match('two'), peg.match('three'));
             parser({text:"four shut the door", index: 0}).matched.should.be.false;            
         });
+
+        it('should return result from matching parser', function () {
+            var parser = peg.firstOf(peg.match('one'), 
+                peg.onMatch(peg.match('two'), function (result) {
+                    result.result = "I was matched";
+                }), 
+                peg.match('three'));
+            var result = parser({text:"two three one", index: 0});
+
+            result.result.should.equal("I was matched");
+        });
     });
 
     describe('zeroOrMore operator', function () {
@@ -184,6 +195,25 @@ describe("Parser utils", function () {
             result.matched.should.be.true;
             result.text.should.equal("abababab");
             result.consumed.should.equal(8);
+        });
+
+        it('should return array of results of all matches', function () {
+            var count = 5,
+                innerParser = peg.onMatch(peg.match('ab'), function (result) {
+                    result.result = count;
+                    count = count + 3;
+                }),
+                parser = peg.zeroOrMore(innerParser);
+
+            var result = parser({text: "abababc", index: 0});
+
+            result.matched.should.be.true;
+            result.result.should.be.an.instanceof(Array);
+            result.result.length.should.equal(3);
+
+            result.result[0].result.should.equal(5);
+            result.result[1].result.should.equal(8);
+            result.result[2].result.should.equal(11);
         });
     });
 
@@ -211,6 +241,27 @@ describe("Parser utils", function () {
 
             result.matched.should.be.false;
         });
+    
+        it('should return array of results of all matches', function () {
+            var count = 5,
+                innerParser = peg.onMatch(peg.match('ab'), function (result) {
+                    result.result = count;
+                    count = count + 3;
+                }),
+                parser = peg.oneOrMore(innerParser);
+
+            var result = parser({text: "abababc", index: 0});
+
+            result.matched.should.be.true;
+            result.result.should.be.an.instanceof(Array);
+            result.result.length.should.equal(3);
+
+            result.result[0].result.should.equal(5);
+            result.result[1].result.should.equal(8);
+            result.result[2].result.should.equal(11);
+        });
+
+    });
 
     describe('onMatch operator', function () {
 
