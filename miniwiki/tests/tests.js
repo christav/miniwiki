@@ -1,6 +1,6 @@
 var wiki = require('./../lib/wiki');
 var peg = require('../lib/peg');
-var assert = require('should');
+var should = require('should');
 
 describe("Libraries", function () {
     describe("Wiki library", function () {
@@ -25,7 +25,37 @@ describe("Wiki Markup parser", function () {
             result.matched.should.be.true;
             result.consumed.should.equal(0);
         });
-    })
+    });
+
+    function ignoreThis() {
+    describe('inlineContent', function () {
+        describe('passed ordinary text', function () {
+            var textToParse;
+
+            beforeEach(function () {
+                textToParse = {
+                    text: "This is some ordinary text",
+                    index: 0
+                };
+            });
+
+            it('should match when given regular text', function () {
+                wiki.parsers.inlineContent(textToParse).matched.should.be.true;
+            });
+
+            it('should match the entire text', function () {
+                wiki.parsers.inlineContent(textToParse).text.should.equal(textToParse.text);
+            });
+
+            it('should have text node as parse result', function () {
+                var result = wiki.parsers.inlineContent(textToParse);
+
+                should.exist(result.result);
+                result.result.nodeType.should.equal("text");
+            });
+        });
+    });
+    }
 });
 
 

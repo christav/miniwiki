@@ -17,7 +17,7 @@
 // Bold <- BoldDelim (!BoldEnd InlineContent)+ BoldEnd
 // Italics <- ItalicsDelim (!ItalicsEnd InlineContent)+ ItalicsEnd
 // Link <- CapWord CapWord+
-// Text <- (!EOL .)+
+// Text <- (!(EOL / Bold / Italics / Link) .)+
 // CapWord <- InitialCap lowercase+
 // BoldDelim <- "*"
 // BoldEnd <- BoldDelim / &EOL
@@ -32,32 +32,62 @@
 // Whitespace <- "  / "\t"
 // EOL <- \r\n / \n / END
 
-var eol = peg.firstOf(peg.match("\r\n"), peg.match("\n"), peg.end());
-var whitespace = peg.firstOf(peg.match(" "), peg.match("\t"));
-var spacing = whitespace.zeroOrMore();
-var lowercase = peg.match(/[a-z]/);
-var initialCap = peg.match(/[A-Z]/);
-var h3 = peg.match("!!");
-var h2 = peg.match("!!!");
-var h1 = peg.match("!!!!");
-var italicsEnd = peg.firstOf(peg.match("/"), peg.and(eol));
-var boldEnd = peg.firstOf(peg.match("*"), peg.and(eol));
-var capWord = peg.seq(initialCap, lowercase.oneOrMore());
-var text = peg.seq(peg.not(eol), peg.any).oneOrMore();
-var link = peg.seq(capWord, capWord.oneOrMore());
-var inlineContent;
-var italics = peg.seq(peg.match('/'), peg.seq(peg.not(italicsEnd), inlineContent).oneOrMore(), italicsEnd);
-var bold = peg.seq(peg.match('*', peg.seq(peg.not(boldEnd), inlineContent).oneOrMore(), boldEnd));
+var eol, whitespace, spacing, lowercase, initialCap,
+	h3, h2, h1, italicsEnd, boldEnd, capWord, text,
+	link, italics, bold, inlineContent, paragraph,
+	headerIntro, header, block, htmlText;
+
+eol = peg.firstOf(peg.match("\r\n"), peg.match("\n"), peg.end());
+whitespace = peg.firstOf(peg.match(" "), peg.match("\t"));
+spacing = whitespace.zeroOrMore();
+lowercase = peg.match(/[a-z]/);
+initialCap = peg.match(/[A-Z]/);
+h3 = peg.match("!!");
+h2 = peg.match("!!!");
+h1 = peg.match("!!!!");
+italicsEnd = peg.firstOf(peg.match("/"), peg.and(eol));
+boldEnd = peg.firstOf(peg.match("*"), peg.and(eol));
+capWord = peg.seq(initialCap, lowercase.oneOrMore());
+text = peg.seq(
+	peg.not(peg.seq(eol, bold, italics, link)),
+	peg.any()
+	).oneOrMore()
+	.then(function (result) {
+		result.result = { nodeType: "text" };
+	});
+link = peg.seq(capWord, capWord.oneOrMore());
+italics = peg.seq(peg.match('/'), peg.seq(peg.not(italicsEnd), inlineContent).oneOrMore(), italicsEnd);
+bold = peg.seq(peg.match('*', peg.seq(peg.not(boldEnd), inlineContent).oneOrMore(), boldEnd));
 inlineContent = peg.firstOf(bold, italics, link, text);
-var paragraph = peg.seq(inlineContent.zeroOrMore(), eol);
-var headerIntro = peg.seq(peg.firstOf(h1, h2, h3), spacing);
-var header = peg.seq(headerIntro, inlineContent.zeroOrMore(), eol);
-var block = peg.firstOf(header, paragraph);
-var htmlText = peg.seq(block.zeroOrMore(), peg.end);
+paragraph = peg.seq(inlineContent.zeroOrMore(), eol);
+headerIntro = peg.seq(peg.firstOf(h1, h2, h3), spacing);
+header = peg.seq(headerIntro, inlineContent.zeroOrMore(), eol);
+block = peg.firstOf(header, paragraph);
+htmlText = peg.seq(block.zeroOrMore(), peg.end);
 
 	_.extend(exports, {
 		parsers: {
-			eol: eol 
+			eol: eol,
+			whitespace: whitespace,
+			spacing: spacing,
+			lowercase: lowercase,
+			initialCap: initialCap,
+			h3 : h3,
+			h2 : h2,
+			h1 : h1,
+			italicsEnd: italicsEnd,
+			boldEnd: boldEnd,
+			capWord: capWord,
+			text: text,
+			link: link,
+			inlineContent: inlineContent,
+			italics: italics,
+			bold: bold,
+			paragraph: paragraph,
+			headerIntro: headerIntro,
+			header: header,
+			block: block,
+			htmlText: htmlText
 		}
 	});
 

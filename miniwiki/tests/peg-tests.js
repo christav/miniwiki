@@ -1,5 +1,5 @@
 var peg = require('../lib/peg'),
- assert = require('should');
+ should = require('should');
 
 describe("Parser utils", function () {
     
@@ -236,6 +236,18 @@ describe("Parser utils", function () {
 
             parser({text: "three and more", index: 0});
             called.should.be.true;
+        });
+
+        it('should pass back result of first match', function () {
+            var parser = peg.firstOf(
+                peg.match('one').then(function (result) { result.result = "first"; }),
+                peg.match('two').then(function (result) { result.result = 'second'; })
+            );
+
+            var result = parser({text: "twoone", index: 0});
+
+            should.exist(result.result);
+            result.result.should.equal("second");
         });
     });
 
