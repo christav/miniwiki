@@ -39,7 +39,7 @@ var eol, whitespace, spacing, lowercase, initialCap,
 
 eol = peg.firstOf(peg.match("\r\n"), peg.match("\n"), peg.end());
 whitespace = peg.firstOf(peg.match(" "), peg.match("\t"));
-spacing = whitespace.zeroOrMore();
+spacing = peg.zeroOrMore(whitespace);
 lowercase = peg.match(/[a-z]/);
 initialCap = peg.match(/[A-Z]/);
 h3 = peg.match("!!");
@@ -59,11 +59,11 @@ link = peg.seq(capWord, capWord.oneOrMore());
 italics = peg.seq(peg.match('/'), peg.seq(peg.not(italicsEnd), inlineContent).oneOrMore(), italicsEnd);
 bold = peg.seq(peg.match('*', peg.seq(peg.not(boldEnd), inlineContent).oneOrMore(), boldEnd));
 inlineContent = peg.firstOf(bold, italics, link, text);
-paragraph = peg.seq(inlineContent.zeroOrMore(), eol);
+paragraph = peg.seq(peg.zeroOrMore(inlineContent), eol);
 headerIntro = peg.seq(peg.firstOf(h1, h2, h3), spacing);
-header = peg.seq(headerIntro, inlineContent.zeroOrMore(), eol);
+header = peg.seq(headerIntro, peg.zeroOrMore(inlineContent), eol);
 block = peg.firstOf(header, paragraph);
-htmlText = peg.seq(block.zeroOrMore(), peg.end);
+htmlText = peg.seq(peg.zeroOrMore(block), peg.end);
 
 	_.extend(exports, {
 		parsers: {

@@ -29,14 +29,6 @@ _ = require("underscore");
     // A reusable "match failed" result
     var failedResult = { matched: false, consumed: 0 };
 
-    function matchedResult(parseResult, callback) {
-        // helper function to pass result to callback, if any
-        if (callback) {
-            callback(parseResult);
-        }
-        return parseResult;
-    }
-
     function makeThenFunction(parseFunction) {
     	return function (callback) {
             return function (input) {
@@ -46,30 +38,6 @@ _ = require("underscore");
                 }
                 return result;
             };
-    	};
-    }
-
-    function makeZeroOrMoreFunction(parseFunction) {
-    	return function () {
-    		var zeroOrMoreFunction = function (input) {
-    			var internalInput = {
-    				text: input.text,
-    				index: input.index
-    			};
-    			var result = parseFunction(internalInput);
-    			while(result.matched) {
-    				internalInput.index += result.consumed;
-    				result = parseFunction(internalInput);
-    			}
-    			return {
-    				matched: true,
-    				text: input.text.substring(input.index, internalInput.index),
-    				consumed: internalInput.index - input.index,
-    				result: null
-    			};
-    		};
-    		zeroOrMoreFunction.then = makeThenFunction(zeroOrMoreFunction);
-    		return zeroOrMoreFunction;
     	};
     }
 
@@ -102,7 +70,6 @@ _ = require("underscore");
 
     function makeParser(parseFunction) {
         parseFunction.then = makeThenFunction(parseFunction);
-        parseFunction.zeroOrMore = makeZeroOrMoreFunction(parseFunction);
         parseFunction.oneOrMore = makeOneOrMoreFunction(parseFunction);
         return parseFunction;
     }
@@ -271,6 +238,28 @@ _ = require("underscore");
         });
     }
 
+    function zeroOrMore(parseFunction) {
+        var zeroOrMoreFunction = function (input) {
+            var internalInput = {
+                text: input.text,
+                index: input.index
+            };
+            var result = parseFunction(internalInput);
+            while(result.matched) {
+                internalInput.index += result.consumed;
+                result = parseFunction(internalInput);
+            }
+            return {
+                matched: true,
+                text: input.text.substring(input.index, internalInput.index),
+                consumed: internalInput.index - input.index,
+                result: null
+            };
+        };
+        zeroOrMoreFunction.then = makeThenFunction(zeroOrMoreFunction);
+        return zeroOrMoreFunction;
+    }
+
     _.extend(exports, {
         any: any,
         end: end,
@@ -278,7 +267,9 @@ _ = require("underscore");
         and: and,
         match: match,
         seq: seq,
-        firstOf: firstOf
+        firstOf: firstOf,
+        zeroOrMore: zeroOrMore
+        //oneOrMore: oneOrMore
     });
 
 })();

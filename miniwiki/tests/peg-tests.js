@@ -253,7 +253,7 @@ describe("Parser utils", function () {
 
     describe('zeroOrMore operator', function () {
         it('should match when there is no match', function () {
-            var parser = peg.match("abc").zeroOrMore();
+            var parser = peg.zeroOrMore(peg.match("abc"));
             var result = parser({text: "xyz", index: 0});
 
             result.matched.should.be.true;
@@ -262,7 +262,7 @@ describe("Parser utils", function () {
         });
 
         it('should match where there are multiple matches', function () {
-            var parser = peg.match('ab').zeroOrMore();
+            var parser = peg.zeroOrMore(peg.match('ab'));
             var result = parser({text: "ababababcab", index: 0});
 
             result.matched.should.be.true;
@@ -273,7 +273,7 @@ describe("Parser utils", function () {
         it('should invoke callback on successful match', function() {
             var called = false;
 
-            var parser = peg.match(/[0-9]/).zeroOrMore().then(function () { called = true; });
+            var parser = peg.zeroOrMore(peg.match(/[0-9]/)).then(function () { called = true; });
             parser({ text: "8675309", index: 0});
 
             called.should.be.true;
