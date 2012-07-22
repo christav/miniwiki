@@ -41,36 +41,8 @@ _ = require("underscore");
     	};
     }
 
-    function makeOneOrMoreFunction(parseFunction) {
-    	return function () {
-    		var oneOrMoreFunction = function (input) {
-    			var internalInput = {
-    				text: input.text,
-    				index: input.index
-    			};
-    			var result = parseFunction(internalInput);
-    			if(!result.matched) { return failedResult; }
-    			
-    			while(result.matched) {	
-    				internalInput.index += result.consumed;
-    				result = parseFunction(internalInput);
-    			}
-    			return {
-    				matched: true,
-    				text: input.text.substring(input.index, internalInput.index),
-    				consumed: internalInput.index - input.index,
-    				result: null
-    			};
-    		};
-    		oneOrMoreFunction.then = makeThenFunction(oneOrMoreFunction);
-    		return oneOrMoreFunction;
-    	};
-    }
-
-
     function makeParser(parseFunction) {
         parseFunction.then = makeThenFunction(parseFunction);
-        parseFunction.oneOrMore = makeOneOrMoreFunction(parseFunction);
         return parseFunction;
     }
 
@@ -260,6 +232,30 @@ _ = require("underscore");
         return zeroOrMoreFunction;
     }
 
+    function oneOrMore(parseFunction) {
+        var oneOrMoreFunction = function (input) {
+            var internalInput = {
+                text: input.text,
+                index: input.index
+            };
+            var result = parseFunction(internalInput);
+            if(!result.matched) { return failedResult; }
+            
+            while(result.matched) { 
+                internalInput.index += result.consumed;
+                result = parseFunction(internalInput);
+            }
+            return {
+                matched: true,
+                text: input.text.substring(input.index, internalInput.index),
+                consumed: internalInput.index - input.index,
+                result: null
+            };
+        };
+        oneOrMoreFunction.then = makeThenFunction(oneOrMoreFunction);
+        return oneOrMoreFunction;
+    }
+
     _.extend(exports, {
         any: any,
         end: end,
@@ -268,8 +264,8 @@ _ = require("underscore");
         match: match,
         seq: seq,
         firstOf: firstOf,
-        zeroOrMore: zeroOrMore
-        //oneOrMore: oneOrMore
+        zeroOrMore: zeroOrMore,
+        oneOrMore: oneOrMore
     });
 
 })();

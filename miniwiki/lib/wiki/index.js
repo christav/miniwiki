@@ -47,17 +47,17 @@ h2 = peg.match("!!!");
 h1 = peg.match("!!!!");
 italicsEnd = peg.firstOf(peg.match("/"), peg.and(eol));
 boldEnd = peg.firstOf(peg.match("*"), peg.and(eol));
-capWord = peg.seq(initialCap, lowercase.oneOrMore());
-text = peg.seq(
+capWord = peg.seq(initialCap, peg.oneOrMore(lowercase));
+text = peg.oneOrMore(peg.seq(
 	peg.not(peg.seq(eol, bold, italics, link)),
 	peg.any()
-	).oneOrMore()
+	))
 	.then(function (result) {
 		result.result = { nodeType: "text" };
 	});
-link = peg.seq(capWord, capWord.oneOrMore());
-italics = peg.seq(peg.match('/'), peg.seq(peg.not(italicsEnd), inlineContent).oneOrMore(), italicsEnd);
-bold = peg.seq(peg.match('*', peg.seq(peg.not(boldEnd), inlineContent).oneOrMore(), boldEnd));
+link = peg.seq(capWord, peg.oneOrMore(capWord));
+italics = peg.seq(peg.match('/'), peg.oneOrMore(peg.seq(peg.not(italicsEnd), inlineContent)), italicsEnd);
+bold = peg.seq(peg.match('*', peg.oneOrMore(peg.seq(peg.not(boldEnd), inlineContent)), boldEnd));
 inlineContent = peg.firstOf(bold, italics, link, text);
 paragraph = peg.seq(peg.zeroOrMore(inlineContent), eol);
 headerIntro = peg.seq(peg.firstOf(h1, h2, h3), spacing);
