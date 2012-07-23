@@ -17,7 +17,7 @@
 // Bold <- BoldDelim (!BoldEnd InlineContent)+ BoldEnd
 // Italics <- ItalicsDelim (!ItalicsEnd InlineContent)+ ItalicsEnd
 // Link <- CapWord CapWord+
-// Text <- (!(EOL / Bold / Italics / Link) .)+
+// Text <- (!(EOL / BoldDelim / ItalicsDelim / Link) .)+
 // CapWord <- InitialCap lowercase+
 // BoldDelim <- "*"
 // BoldEnd <- BoldDelim / &EOL
@@ -43,6 +43,35 @@ function link(input) {
 				}
 			};
 		});
+	return parser(input);
+}
+
+function text(input) {
+	var parser = peg.oneOrMore(
+		peg.seq(
+			peg.not(peg.firstOf(eol, boldDelim, italicsDelim, link)), 
+			peg.any
+		));
+
+	var result = parser(input);
+	if(result.matched) {
+		result.result = {
+			nodeType: 'text',
+			render: function (outputFunc) {
+
+			}
+		};
+	}
+	return result;
+}
+
+function boldDelim(input) {
+	var parser = peg.match('*');
+	return parser(input);
+}
+
+function italicsDelim(input) {
+	var parser = peg.match('/');
 	return parser(input);
 }
 
@@ -123,7 +152,7 @@ htmlText = peg.seq(peg.zeroOrMore(block), peg.end);
 			// italicsEnd: italicsEnd,
 			// boldEnd: boldEnd,
 			capWord: capWord,
-			// text: text,
+			text: text,
 			link: link,
 			// inlineContent: inlineContent,
 			// italics: italics,

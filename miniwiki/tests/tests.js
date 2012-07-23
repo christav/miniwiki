@@ -63,6 +63,39 @@ describe("Wiki Markup parser", function () {
             });
         });
     });
+
+    describe("text", function () {
+        describe("when given ordinary text", function () {
+            var text;
+
+            beforeEach(function () {
+                text = {
+                    text: "This is some plain text",
+                    index: 0
+                };
+            });
+
+            it('should match', function () {
+                var result = wiki.parsers.text(text);
+                result.matched.should.be.true;
+            });
+
+            it('should match entire text', function () {
+                var result = wiki.parsers.text(text);
+                result.text.should.equal(text.text);
+            });
+
+            it('should return "text" as node type', function () {
+                var result = wiki.parsers.text(text);
+                result.result.nodeType.should.equal('text');
+            });
+
+            it('should have a render method on result', function () {
+                var result = wiki.parsers.text(text);
+                result.result.render.should.be.instanceof(Function);
+            });
+        });
+    })
 });
 
 
