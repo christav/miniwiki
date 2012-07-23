@@ -95,7 +95,61 @@ describe("Wiki Markup parser", function () {
                 result.result.render.should.be.instanceof(Function);
             });
         });
-    })
+
+        describe('when given text with embedded link', function () {
+            var text;
+
+            beforeEach(function () {
+                text = {
+                    text: "This is a WikiWord going somewhere else",
+                    index: 0
+                };
+            });
+
+            it('should match', function () {
+                wiki.parsers.text(text).matched.should.be.true;
+            });
+
+            it('should match up to the link', function () {
+                wiki.parsers.text(text).text.should.equal("This is a ");
+            });
+        });
+
+        describe('when embedding text with bold', function () {
+            var text;
+
+            beforeEach(function () {
+                text = {
+                    text: "This has *bold statements* in it",
+                    index: 0
+                };
+            });
+
+            it('should match up to the bold', function () {
+                var result = wiki.parsers.text(text);
+                result.matched.should.be.true;
+                result.text.should.equal("This has ");
+            });
+        });
+
+        describe('when embedding text with italics', function () {
+            var text;
+
+            beforeEach(function () {
+                text = {
+                    text: "This has /emphasized statements/ in it",
+                    index: 0
+                };
+            });
+
+            it('should match up to the italics', function () {
+                var result = wiki.parsers.text(text);
+                result.matched.should.be.true;
+                result.text.should.equal("This has ");
+            });
+        });
+
+    });
 });
 
 
