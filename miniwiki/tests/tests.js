@@ -27,35 +27,42 @@ describe("Wiki Markup parser", function () {
         });
     });
 
-    function ignoreThis() {
-    describe('inlineContent', function () {
-        describe('passed ordinary text', function () {
-            var textToParse;
+    describe("link", function () {
+        describe("passed ordinary text", function () {
+            it('should not match', function () {
+                var text = "This is not a wikiword";
+                var result = wiki.parsers.link({text: text, index: 0});
+
+                result.matched.should.be.false;
+            });
+        });
+
+        describe('passed a WikiWord', function () {
+            var text;
 
             beforeEach(function () {
-                textToParse = {
-                    text: "This is some ordinary text",
+                text = {
+                    text: "ThisIsSomeWikiWord",
                     index: 0
                 };
             });
 
-            it('should match when given regular text', function () {
-                wiki.parsers.inlineContent(textToParse).matched.should.be.true;
+            it('should match', function () {
+                var result = wiki.parsers.link(text);
+                result.matched.should.be.true;
             });
 
-            it('should match the entire text', function () {
-                wiki.parsers.inlineContent(textToParse).text.should.equal(textToParse.text);
+            it('should return "link" as node type', function () {
+                var result = wiki.parsers.link(text);
+                result.result.nodeType.should.equal('link');
             });
 
-            it('should have text node as parse result', function () {
-                var result = wiki.parsers.inlineContent(textToParse);
-
-                should.exist(result.result);
-                result.result.nodeType.should.equal("text");
+            it('should have a render method on result', function () {
+                var result = wiki.parsers.link(text);
+                result.result.render.should.be.instanceof(Function);
             });
         });
     });
-    }
 });
 
 

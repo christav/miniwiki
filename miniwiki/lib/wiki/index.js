@@ -29,9 +29,56 @@
 // InitialCap <- [A-Z]
 // Lowercase <- [a-z]
 // Spacing <- Whitespace*
-// Whitespace <- "  / "\t"
+// Whitespace <- " " / "\t"
 // EOL <- \r\n / \n / END
 
+function link(input) {
+	var parser = peg.onMatch(
+		peg.seq(capWord, peg.oneOrMore(capWord)),
+		function (result) {
+			result.result = {
+				nodeType: 'link',
+				render: function (outputFunc) {
+
+				}
+			};
+		});
+	return parser(input);
+}
+
+function capWord(input) {
+	var parser = peg.seq(initialCap, peg.oneOrMore(lowercase));
+	return parser(input);
+}
+
+function initialCap(input) {
+	var parser = peg.match(/[A-Z]/);
+	return parser(input);
+}
+
+function lowercase(input) {
+	var parser = peg.match(/[a-z]/);
+	return parser(input);
+}
+
+function spacing(input) {
+	var parser = peg.zeroOrMore(whitespace);
+	return parser(input);
+}
+
+function whitespace(input) {
+	var parser = peg.firstOf(peg.match(" "), peg.match("\t"));
+	return parser(input);
+}
+
+function eol(input) {
+	var parser = peg.firstOf(peg.match('\r\n'), peg.match('\n'), peg.end);
+	return parser(input);
+}
+
+(function () {
+	// sock these away until replaced by the
+	// fully function versions
 var eol, whitespace, spacing, lowercase, initialCap,
 	h3, h2, h1, italicsEnd, boldEnd, capWord, text,
 	link, italics, bold, inlineContent, paragraph,
@@ -61,6 +108,7 @@ headerIntro = peg.seq(peg.firstOf(h1, h2, h3), spacing);
 header = peg.seq(headerIntro, peg.zeroOrMore(inlineContent), eol);
 block = peg.firstOf(header, paragraph);
 htmlText = peg.seq(peg.zeroOrMore(block), peg.end);
+})();
 
 	_.extend(exports, {
 		parsers: {
@@ -69,22 +117,22 @@ htmlText = peg.seq(peg.zeroOrMore(block), peg.end);
 			spacing: spacing,
 			lowercase: lowercase,
 			initialCap: initialCap,
-			h3 : h3,
-			h2 : h2,
-			h1 : h1,
-			italicsEnd: italicsEnd,
-			boldEnd: boldEnd,
+			// h3 : h3,
+			// h2 : h2,
+			// h1 : h1,
+			// italicsEnd: italicsEnd,
+			// boldEnd: boldEnd,
 			capWord: capWord,
-			text: text,
+			// text: text,
 			link: link,
-			inlineContent: inlineContent,
-			italics: italics,
-			bold: bold,
-			paragraph: paragraph,
-			headerIntro: headerIntro,
-			header: header,
-			block: block,
-			htmlText: htmlText
+			// inlineContent: inlineContent,
+			// italics: italics,
+			// bold: bold,
+			// paragraph: paragraph,
+			// headerIntro: headerIntro,
+			// header: header,
+			// block: block,
+			// htmlText: htmlText
 		}
 	});
 
