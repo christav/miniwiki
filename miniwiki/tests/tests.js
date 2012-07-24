@@ -1,3 +1,5 @@
+"use strict";
+
 var wiki = require('./../lib/wiki');
 var peg = require('../lib/peg');
 var should = require('should');
@@ -187,7 +189,7 @@ describe("Wiki Markup parser", function () {
 
     describe('bold', function () {
         describe('given inline text', function () {
-            text = {
+            var text = {
                 text: "*This is bold text* with non bold following",
                 index: 0
             };
@@ -202,6 +204,19 @@ describe("Wiki Markup parser", function () {
                 var result = wiki.parsers.bold(text);
 
                 result.result.nodeType.should.equal('bold');
+            });
+        });
+
+        describe('given text with links', function () {
+            var text = {
+                text: "*This text LinksSomewhere and SomewhereElse too*",
+                index: 0
+            };
+
+            it('should match all the text', function () {
+                var result = wiki.parsers.bold(text);
+                result.matched.should.be.true;
+                result.consumed.should.equal(text.text.length);
             });
         });
     });

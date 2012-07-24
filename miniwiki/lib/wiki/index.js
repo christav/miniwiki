@@ -90,7 +90,11 @@ function bold(input) {
 }
 
 function boldContent(input) {
-	return text(input);
+	// BoldContent <- !BoldEnd (link / ItalicsWithoutBold / Text)
+	var parser = peg.seq(
+		peg.not(boldEnd),
+		peg.firstOf(link, text));
+	return parser(input);
 }
 
 function boldDelim(input) {
