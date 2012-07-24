@@ -184,6 +184,27 @@ describe("Wiki Markup parser", function () {
             });
         })
     });
+
+    describe('bold', function () {
+        describe('given inline text', function () {
+            text = {
+                text: "*This is bold text* with non bold following",
+                index: 0
+            };
+
+            it('should match the bold text', function () {
+                var result = wiki.parsers.bold(text);
+                result.matched.should.be.true;
+                result.text.should.equal("This is bold text");
+            });
+
+            it('should return node type as bold', function () {
+                var result = wiki.parsers.bold(text);
+
+                result.result.nodeType.should.equal('bold');
+            });
+        });
+    });
 });
 
 

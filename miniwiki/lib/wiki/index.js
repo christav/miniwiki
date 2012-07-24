@@ -76,8 +76,30 @@ function text(input) {
 	return result;
 }
 
+function bold(input) {
+	var parser = peg.seq(boldDelim, peg.oneOrMore(boldContent), boldEnd);
+	var result = parser(input);
+	if(result.matched) {
+		result.text = result.result[1].text;
+		result.result = {
+			nodeType: 'bold',
+			render: function (outputFunc) { }
+		};
+	}
+	return result;
+}
+
+function boldContent(input) {
+	return text(input);
+}
+
 function boldDelim(input) {
 	var parser = peg.match('*');
+	return parser(input);
+}
+
+function boldEnd(input) {
+	var parser = peg.firstOf(boldDelim, peg.and(eol));
 	return parser(input);
 }
 
@@ -133,7 +155,7 @@ function eol(input) {
 			link: link,
 			inlineContent: inlineContent,
 			// italics: italics,
-			// bold: bold,
+			bold: bold,
 			// paragraph: paragraph,
 			// headerIntro: headerIntro,
 			// header: header,
