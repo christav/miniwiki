@@ -150,6 +150,11 @@ describe("Wiki Markup parser", function () {
         });
 
     });
+
+
+    describe('inline content', function () {
+
+    });
 });
 
 
