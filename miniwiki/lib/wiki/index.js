@@ -14,8 +14,14 @@
 // HeaderIntro <- (H1 / H2 / H3) Spacing
 // Paragraph <- InlineContent* EOL
 // InlineContent <- Bold / Italics / Link / Text
-// Bold <- BoldDelim (!BoldEnd InlineContent)+ BoldEnd
-// Italics <- ItalicsDelim (!ItalicsEnd InlineContent)+ ItalicsEnd
+// Bold <- BoldDelim BoldContent+ BoldEnd
+// BoldContent <- !BoldEnd (link / ItalicsWithoutBold / Text)
+// ItalicsWithoutBold <- ItalicsDelim ItalicsWithoutBoldContent+ ItalicsEnd
+// ItalicsWithoutBoldContent <- !ItalicsEnd (Link / Text)
+// Italics <- ItalicsDelim ItalicsContent+ ItalicsEnd
+// ItalicsContent <- !ItalicsEnd (Link / BoldWithoutItalics / Text)
+// BoldWithoutItalics <- BoldDelim BoldWithoutItalicsContent+ BoldEnd
+// BoldWithoutItalicsContent <- !BoldEnd (Link / Text)
 // Link <- CapWord CapWord+
 // Text <- (!(EOL / BoldDelim / ItalicsDelim / Link) .)+
 // CapWord <- InitialCap lowercase+
