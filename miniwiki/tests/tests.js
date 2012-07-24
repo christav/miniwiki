@@ -153,7 +153,36 @@ describe("Wiki Markup parser", function () {
 
 
     describe('inline content', function () {
+        describe("given plain text", function () {
 
+            var text = {
+                text: "This is some plain text",
+                index: 0
+            };
+
+            it('should return plain text', function () {
+                var result = wiki.parsers.inlineContent(text);
+
+                result.matched.should.be.true;
+                result.text.should.equal(text.text);
+                result.result.nodeType.should.equal('text');
+            });
+        });
+
+        describe('given a link', function () {
+            var text = {
+                text: "WikiWord links somewhere",
+                index: 0
+            };
+
+            it('should match and return the link', function (){
+                var result = wiki.parsers.inlineContent(text);
+
+                result.matched.should.be.true;
+                result.text.should.equal("WikiWord");
+                result.result.nodeType.should.equal('link');
+            });
+        })
     });
 });
 

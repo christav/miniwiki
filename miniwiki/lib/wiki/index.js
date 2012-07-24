@@ -38,6 +38,11 @@
 // Whitespace <- " " / "\t"
 // EOL <- \r\n / \n / END
 
+function inlineContent(input) {
+	var parser = peg.firstOf(link, text);
+	return parser(input);
+}
+
 function link(input) {
 	var parser = peg.onMatch(
 		peg.seq(capWord, peg.oneOrMore(capWord)),
@@ -126,7 +131,7 @@ function eol(input) {
 			capWord: capWord,
 			text: text,
 			link: link,
-			// inlineContent: inlineContent,
+			inlineContent: inlineContent,
 			// italics: italics,
 			// bold: bold,
 			// paragraph: paragraph,
