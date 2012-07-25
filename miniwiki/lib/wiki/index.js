@@ -5,6 +5,35 @@
 	var _ = require("underscore");
 	var peg = require("../peg");
 
+function dump(obj, indent) {
+	if (!indent) {
+		indent = 0;
+	}
+	if(obj === undefined) {
+		return "undefined\n";
+	}
+	if(obj === null) {
+		return "null\n";
+	}
+	if(obj instanceof String) {
+		return '"' + obj + '"\n';
+	}
+	if(obj instanceof Number) {
+		return obj + "\n";
+	}
+	if(obj instanceof Function) {
+		return "Function: " + obj.toString() + "\n";
+	}
+	var result = "{\n";
+	obj.getOwnProperties().forEach(function (propName) {
+		result += propName + ": ";
+		result += dump(obj[propName], index + 1);
+		result += ",\n";
+	})
+	result += "}\n";
+	return result;
+}
+
 //
 // PEG Parser for the wiki markup
 //
@@ -80,11 +109,21 @@ function bold(input) {
 	var parser = peg.seq(boldDelim, peg.oneOrMore(boldContent), boldEnd);
 	var result = parser(input);
 	if(result.matched) {
-		result.text = result.result[1].text;
-		result.result = {
+		console.log("BOLD: matched");
+		console.log("BOLD: result = " + result.text);
+		var resultObj = {
+			_innerContent: result.result[1],
 			nodeType: 'bold',
-			render: function (outputFunc) { }
+			render: function (outputFunc) {
+				outputFunc("<b>");
+				_.each(this._innerContent, function (item) {
+					item.render(outputFunc);
+				});
+				outputFunc("</b>");
+			 }
 		};
+		result.text = result.result[1].text;
+		result.result = resultObj;
 	}
 	return result;
 }
@@ -94,7 +133,15 @@ function boldContent(input) {
 	var parser = peg.seq(
 		peg.not(boldEnd),
 		peg.firstOf(link, text));
-	return parser(input);
+	var result = parser(input);
+	if(result.matched) {
+		console.log("BOLDCONTENT: Matched " + result.text);
+		console.log("BOLDCONTENT: There are " + result.result.length + " result objects");
+		result.result = result.result[1];
+		console.log("BOLDCONTENT: Text node type = " + result.result.nodeType);
+		console.log("BOLDCONTENT: result.result = " + dump(result.result));
+	}
+	return result;
 }
 
 function boldDelim(input) {

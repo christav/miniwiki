@@ -218,6 +218,17 @@ describe("Wiki Markup parser", function () {
                 result.matched.should.be.true;
                 result.consumed.should.equal(text.text.length);
             });
+
+            it('should render text plus links in bold', function () {
+                var resultText = "";
+
+                var result = wiki.parsers.bold(text);
+                result.result.render(function (text) {
+                    resultText += text;
+                });
+
+                resultText.should.match(/^<b>.*<\/b>$/);                
+            });
         });
     });
 });
