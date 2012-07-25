@@ -234,6 +234,21 @@ describe("Wiki Markup parser", function () {
                 resultText.should.match(/<a.*>SomewhereElse<\/a>/);
             });
         });
+
+        describe("given text that's missing bold end", function () {
+            var text = {
+                text: "*This is bold text",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.bold(text).matched.should.be.true;
+            });
+
+            it('should match text up to end of line', function () {
+                wiki.parsers.bold(text).text.should.equal("This is bold text");
+            });
+        })
     });
 
     describe("boldContent", function () {
