@@ -227,7 +227,11 @@ describe("Wiki Markup parser", function () {
                     resultText += text;
                 });
 
-                resultText.should.match(/^<b>.*<\/b>$/);                
+                resultText.should.match(/^<b>.*<\/b>$/);
+                resultText.should.match(/This text/);
+                resultText.should.match(/too/);
+                resultText.should.match(/<a.*>LinksSomewhere<\/a>/);
+                resultText.should.match(/<a.*>SomewhereElse<\/a>/);
             });
         });
     });

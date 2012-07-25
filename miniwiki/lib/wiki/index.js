@@ -101,7 +101,9 @@ function link(input) {
 			result.result = {
 				nodeType: 'link',
 				render: function (outputFunc) {
-
+					outputFunc("<a href='" + result.text + "'>");
+					outputFunc(result.text);
+					outputFunc("</a>");
 				}
 			};
 		});
@@ -120,7 +122,7 @@ function text(input) {
 		result.result = {
 			nodeType: 'text',
 			render: function (outputFunc) {
-
+				outputFunc(result.text);
 			}
 		};
 	}
