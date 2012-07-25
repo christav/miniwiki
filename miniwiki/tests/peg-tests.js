@@ -144,6 +144,32 @@ describe("Parser utils", function () {
 
             result.matched.should.be.false;
         });
+
+        it('should return array of results for all matching subparsers when matched', function () {
+            var text = {
+                text: "one two five no three",
+                index: 0
+            };
+
+            var parser = peg.seq(
+                peg.onMatch(peg.match("one "), function (result) {
+                    result.result = "first";
+                }),
+                peg.onMatch(peg.match("two "), function (result) {
+                    result.result = 2;
+                }),
+                peg.onMatch(peg.match("five"), function (result) {
+                    result.result = "third";
+                }));
+
+            var result = parser(text);
+
+            result.matched.should.be.true;
+            result.result.length.should.equal(3);
+            result.result[0].result.should.equal('first', "First item doesn't match");
+            result.result[1].result.should.equal(2, "Second item doesn't match");
+            result.result[2].result.should.equal('third', "Third item doesn't match");
+        });
     });
 
     describe('firstOf operator', function () {

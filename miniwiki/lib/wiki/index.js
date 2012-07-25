@@ -6,32 +6,54 @@
 	var peg = require("../peg");
 
 function dump(obj, indent) {
+	var spacing, tab, result;
+
 	if (!indent) {
 		indent = 0;
 	}
+	spacing = new Array(indent * 4).join(' ');
+	tab = "    ";
+
 	if(obj === undefined) {
-		return "undefined\n";
+		return "undefined";
 	}
 	if(obj === null) {
-		return "null\n";
+		return "null";
 	}
-	if(obj instanceof String) {
-		return '"' + obj + '"\n';
+
+	if(typeof obj === 'boolean') {
+		return obj.toString();
 	}
-	if(obj instanceof Number) {
-		return obj + "\n";
+	if(typeof obj === 'string') {
+		return '"' + obj + '"';
 	}
-	if(obj instanceof Function) {
-		return "Function: " + obj.toString() + "\n";
+	if(typeof obj === 'number') {
+		return obj.toString();
 	}
-	var result = "{\n";
-	obj.getOwnProperties().forEach(function (propName) {
-		result += propName + ": ";
-		result += dump(obj[propName], index + 1);
-		result += ",\n";
-	})
-	result += "}\n";
-	return result;
+	if(typeof obj === 'function') {
+		return "Function";
+	}
+
+	if(obj instanceof Array) {
+		result = "[\n";
+		obj.forEach(function (item) {
+			result += spacing + tab + dump(item, indent + 1) + ",\n"
+		});
+		result += spacing + "]";
+		return result;
+	}
+	if(typeof obj === 'object')
+	{
+		result = "{\n";
+		Object.keys(obj).forEach(function (propName) {
+			result += spacing + tab + propName + ": ";
+			result += dump(obj[propName], indent + 1);
+			result += ",\n";
+		})
+		result += spacing + "}";
+		return result;
+	}
+	return 'object ' + obj + ' is not handled correctly';
 }
 
 //
@@ -109,15 +131,13 @@ function bold(input) {
 	var parser = peg.seq(boldDelim, peg.oneOrMore(boldContent), boldEnd);
 	var result = parser(input);
 	if(result.matched) {
-		console.log("BOLD: matched");
-		console.log("BOLD: result = " + result.text);
 		var resultObj = {
 			_innerContent: result.result[1],
 			nodeType: 'bold',
 			render: function (outputFunc) {
 				outputFunc("<b>");
-				_.each(this._innerContent, function (item) {
-					item.render(outputFunc);
+				_.each(this._innerContent.result, function (item) {
+					item.result.render(outputFunc);
 				});
 				outputFunc("</b>");
 			 }
@@ -135,11 +155,7 @@ function boldContent(input) {
 		peg.firstOf(link, text));
 	var result = parser(input);
 	if(result.matched) {
-		console.log("BOLDCONTENT: Matched " + result.text);
-		console.log("BOLDCONTENT: There are " + result.result.length + " result objects");
-		result.result = result.result[1];
-		console.log("BOLDCONTENT: Text node type = " + result.result.nodeType);
-		console.log("BOLDCONTENT: result.result = " + dump(result.result));
+		result.result = result.result[1].result;
 	}
 	return result;
 }
@@ -206,6 +222,7 @@ function eol(input) {
 			link: link,
 			inlineContent: inlineContent,
 			// italics: italics,
+			boldContent: boldContent,
 			bold: bold,
 			// paragraph: paragraph,
 			// headerIntro: headerIntro,

@@ -231,6 +231,28 @@ describe("Wiki Markup parser", function () {
             });
         });
     });
+
+    describe("boldContent", function () {
+        describe('given text', function () {
+            var text = {
+                text: "This is some text",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.boldContent(text).matched.should.be.true;
+            });
+
+            it('should return result from matching text', function () {
+                var result = wiki.parsers.boldContent(text);
+                result.result.should.be.ok;
+                result.text.should.equal(text.text);
+                should.exist(result.result, "result.result");
+                should.exist(result.result.nodeType, "result.result.nodeType");
+                result.result.nodeType.should.equal('text', 'no nodeType');
+            });
+        });
+    });
 });
 
 
