@@ -5,6 +5,35 @@
 	var _ = require("underscore");
 	var peg = require("../peg");
 
+function dump(obj, indent) {
+	if (!indent) {
+		indent = 0;
+	}
+	if(obj === undefined) {
+		return "undefined\n";
+	}
+	if(obj === null) {
+		return "null\n";
+	}
+	if(obj instanceof String) {
+		return '"' + obj + '"\n';
+	}
+	if(obj instanceof Number) {
+		return obj + "\n";
+	}
+	if(obj instanceof Function) {
+		return "Function: " + obj.toString() + "\n";
+	}
+	var result = "{\n";
+	obj.getOwnProperties().forEach(function (propName) {
+		result += propName + ": ";
+		result += dump(obj[propName], index + 1);
+		result += ",\n";
+	})
+	result += "}\n";
+	return result;
+}
+
 //
 // PEG Parser for the wiki markup
 //
@@ -14,10 +43,16 @@
 // HeaderIntro <- (H1 / H2 / H3) Spacing
 // Paragraph <- InlineContent* EOL
 // InlineContent <- Bold / Italics / Link / Text
-// Bold <- BoldDelim (!BoldEnd InlineContent)+ BoldEnd
-// Italics <- ItalicsDelim (!ItalicsEnd InlineContent)+ ItalicsEnd
+// Bold <- BoldDelim BoldContent+ BoldEnd
+// BoldContent <- !BoldEnd (link / ItalicsWithoutBold / Text)
+// ItalicsWithoutBold <- ItalicsDelim ItalicsWithoutBoldContent+ ItalicsEnd
+// ItalicsWithoutBoldContent <- !ItalicsEnd (Link / Text)
+// Italics <- ItalicsDelim ItalicsContent+ ItalicsEnd
+// ItalicsContent <- !ItalicsEnd (Link / BoldWithoutItalics / Text)
+// BoldWithoutItalics <- BoldDelim BoldWithoutItalicsContent+ BoldEnd
+// BoldWithoutItalicsContent <- !BoldEnd (Link / Text)
 // Link <- CapWord CapWord+
-// Text <- (!(EOL / Bold / Italics / Link) .)+
+// Text <- (!(EOL / BoldDelim / ItalicsDelim / Link) .)+
 // CapWord <- InitialCap lowercase+
 // BoldDelim <- "*"
 // BoldEnd <- BoldDelim / &EOL
@@ -32,72 +67,81 @@
 // Whitespace <- " " / "\t"
 // EOL <- \r\n / \n / END
 
-function htmlText(input) {
-	var parser = peg.seq(peg.zeroOrMore(block), peg.end);
-	return parser(input);
-}
-
-function block(input) {
-	var parser = peg.firstOf(header, paragraph);
-	return parser(input);
-}
-
-function header(input) {
-	var parser = peg.seq(headerInto, peg.zeroOrMore(inlineContent), eol);
-	return parser(input);
-}
-
-function headerIntro(input) {
-	var parser = peg.seq(
-		peg.firstOf(h1, h2, h3),
-		spacing);
-	return parser(input);
-}
-
-function paragraph(input) {
-	var parser = peg.seq(peg.zeroOrMore(inlineContent), eol);
-	return parser(input);
-}
-
 function inlineContent(input) {
-	var parser = peg.firstOf(bold, italics, link, text);
-	return parser(input);
-}
-
-function bold(input) {
-	var parser = peg.seq(boldDelim, 
-		peg.oneOrMore(peg.seq(peg.not(boldEnd), inlineContent)),
-		boldEnd);
-	return parser(input);
-}
-
-function italics(input) {
-	var parser = peg.seq(italicsDelim, 
-		peg.oneOrMore(peg.seq(peg.not(italicsEnd), inlineContent)),
-		italicsEnd);
+	var parser = peg.firstOf(link, text);
 	return parser(input);
 }
 
 function link(input) {
-	var parser = peg.seq(capWord, peg.oneOrMore(capWord));
+	var parser = peg.onMatch(
+		peg.seq(capWord, peg.oneOrMore(capWord)),
+		function (result) {
+			result.result = {
+				nodeType: 'link',
+				render: function (outputFunc) {
+
+				}
+			};
+		});
 	return parser(input);
 }
 
 function text(input) {
 	var parser = peg.oneOrMore(
 		peg.seq(
-			peg.not(
-				peg.firstOf(
-					eol, bold, italics, link
-				)
-			), peg.any)
-		);
-	return parser(input);
+			peg.not(peg.firstOf(eol, boldDelim, italicsDelim, link)), 
+			peg.any
+		));
+
+	var result = parser(input);
+	if(result.matched) {
+		result.result = {
+			nodeType: 'text',
+			render: function (outputFunc) {
+
+			}
+		};
+	}
+	return result;
 }
 
-function capWord(input) {
-	var parser = peg.seq(initialCap, peg.oneOrMore(lowercase));
-	return parser(input);
+function bold(input) {
+	var parser = peg.seq(boldDelim, peg.oneOrMore(boldContent), boldEnd);
+	var result = parser(input);
+	if(result.matched) {
+		console.log("BOLD: matched");
+		console.log("BOLD: result = " + result.text);
+		var resultObj = {
+			_innerContent: result.result[1],
+			nodeType: 'bold',
+			render: function (outputFunc) {
+				outputFunc("<b>");
+				_.each(this._innerContent, function (item) {
+					item.render(outputFunc);
+				});
+				outputFunc("</b>");
+			 }
+		};
+		result.text = result.result[1].text;
+		result.result = resultObj;
+	}
+	return result;
+}
+
+function boldContent(input) {
+	// BoldContent <- !BoldEnd (link / ItalicsWithoutBold / Text)
+	var parser = peg.seq(
+		peg.not(boldEnd),
+		peg.firstOf(link, text));
+	var result = parser(input);
+	if(result.matched) {
+		console.log("BOLDCONTENT: Matched " + result.text);
+		console.log("BOLDCONTENT: There are " + result.result.length + " result objects");
+		result.result = result.result[1];
+		console.log("BOLDCONTENT: Text node type = " + result.result.nodeType);
+		console.log("BOLDCONTENT: result.result = " + dump(result.result));
+	}
+	return result;
 }
 
 function boldDelim(input) {
@@ -115,44 +159,18 @@ function italicsDelim(input) {
 	return parser(input);
 }
 
-function italicsEnd(input) {
-	var parser = peg.firstOf(italicsDelim, peg.and(eol));
-	return parser(input);
-}
-
-function h1(input) {
-	var parser = peg.match("!!!!");
-	return parser(input);
-}
-
-function h2(input) {
-	var parser = peg.match("!!!");
-	return parser(input);
-}
-
-function h3(input) {
-	var parser = peg.match("!!");
+function capWord(input) {
+	var parser = peg.seq(initialCap, peg.oneOrMore(lowercase));
 	return parser(input);
 }
 
 function initialCap(input) {
-	var currentChar = input.text.charAt(input.index);
-
-	if("ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(currentChar) !== -1)
-	{
-		return {
-			matched: true,
-			text: currentChar,
-			consumed: 1,
-			result: null
-		};
-	}
-
-	return { matched: false, consumed: 0 };
+	var parser = peg.match(/[A-Z]/);
+	return parser(input);
 }
 
 function lowercase(input) {
-	var parser = peg.not(initialCap);
+	var parser = peg.match(/[a-z]/);
 	return parser(input);
 }
 
@@ -162,23 +180,14 @@ function spacing(input) {
 }
 
 function whitespace(input) {
-	var currentChar = input.text.charAt(input.index);
-	if(currentChar === " " || currentChar === "\t") {
-		return {
-			matched: true,
-			text: currentChar,
-			consumed: 1,
-			result: null
-		};
-	}
-	return { matched: false, consumed: 0 };
-}
-
-function eol(input) {
-	var parser = peg.firstOf(peg.match("\r\n"), peg.match("\n"), peg.end);
+	var parser = peg.firstOf(peg.match(" "), peg.match("\t"));
 	return parser(input);
 }
 
+function eol(input) {
+	var parser = peg.firstOf(peg.match('\r\n'), peg.match('\n'), peg.end);
+	return parser(input);
+}
 
 	_.extend(exports, {
 		parsers: {
@@ -187,24 +196,22 @@ function eol(input) {
 			spacing: spacing,
 			lowercase: lowercase,
 			initialCap: initialCap,
-			h3 : h3,
-			h2 : h2,
-			h1 : h1,
-			italicsEnd: italicsEnd,
-			italicsDelim: italicsDelim,
-			boldEnd: boldEnd,
-			boldDelim: boldDelim,
+			// h3 : h3,
+			// h2 : h2,
+			// h1 : h1,
+			// italicsEnd: italicsEnd,
+			// boldEnd: boldEnd,
 			capWord: capWord,
 			text: text,
 			link: link,
 			inlineContent: inlineContent,
-			italics: italics,
+			// italics: italics,
 			bold: bold,
-			paragraph: paragraph,
-			headerIntro: headerIntro,
-			header: header,
-			block: block,
-			htmlText: htmlText
+			// paragraph: paragraph,
+			// headerIntro: headerIntro,
+			// header: header,
+			// block: block,
+			// htmlText: htmlText
 		}
 	});
 

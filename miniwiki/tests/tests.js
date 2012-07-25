@@ -1,3 +1,5 @@
+"use strict";
+
 var wiki = require('./../lib/wiki');
 var peg = require('../lib/peg');
 var should = require('should');
@@ -27,35 +29,208 @@ describe("Wiki Markup parser", function () {
         });
     });
 
-    function ignoreThis() {
-    describe('inlineContent', function () {
-        describe('passed ordinary text', function () {
-            var textToParse;
+    describe("link", function () {
+        describe("passed ordinary text", function () {
+            it('should not match', function () {
+                var text = "This is not a wikiword";
+                var result = wiki.parsers.link({text: text, index: 0});
+
+                result.matched.should.be.false;
+            });
+        });
+
+        describe('passed a WikiWord', function () {
+            var text;
 
             beforeEach(function () {
-                textToParse = {
-                    text: "This is some ordinary text",
+                text = {
+                    text: "ThisIsSomeWikiWord",
                     index: 0
                 };
             });
 
-            it('should match when given regular text', function () {
-                wiki.parsers.inlineContent(textToParse).matched.should.be.true;
+            it('should match', function () {
+                var result = wiki.parsers.link(text);
+                result.matched.should.be.true;
             });
 
-            it('should match the entire text', function () {
-                wiki.parsers.inlineContent(textToParse).text.should.equal(textToParse.text);
+            it('should return "link" as node type', function () {
+                var result = wiki.parsers.link(text);
+                result.result.nodeType.should.equal('link');
             });
 
-            it('should have text node as parse result', function () {
-                var result = wiki.parsers.inlineContent(textToParse);
-
-                should.exist(result.result);
-                result.result.nodeType.should.equal("text");
+            it('should have a render method on result', function () {
+                var result = wiki.parsers.link(text);
+                result.result.render.should.be.instanceof(Function);
             });
         });
     });
-    }
+
+    describe("text", function () {
+        describe("when given ordinary text", function () {
+            var text;
+
+            beforeEach(function () {
+                text = {
+                    text: "This is some plain text",
+                    index: 0
+                };
+            });
+
+            it('should match', function () {
+                var result = wiki.parsers.text(text);
+                result.matched.should.be.true;
+            });
+
+            it('should match entire text', function () {
+                var result = wiki.parsers.text(text);
+                result.text.should.equal(text.text);
+            });
+
+            it('should return "text" as node type', function () {
+                var result = wiki.parsers.text(text);
+                result.result.nodeType.should.equal('text');
+            });
+
+            it('should have a render method on result', function () {
+                var result = wiki.parsers.text(text);
+                result.result.render.should.be.instanceof(Function);
+            });
+        });
+
+        describe('when given text with embedded link', function () {
+            var text;
+
+            beforeEach(function () {
+                text = {
+                    text: "This is a WikiWord going somewhere else",
+                    index: 0
+                };
+            });
+
+            it('should match', function () {
+                wiki.parsers.text(text).matched.should.be.true;
+            });
+
+            it('should match up to the link', function () {
+                wiki.parsers.text(text).text.should.equal("This is a ");
+            });
+        });
+
+        describe('when embedding text with bold', function () {
+            var text;
+
+            beforeEach(function () {
+                text = {
+                    text: "This has *bold statements* in it",
+                    index: 0
+                };
+            });
+
+            it('should match up to the bold', function () {
+                var result = wiki.parsers.text(text);
+                result.matched.should.be.true;
+                result.text.should.equal("This has ");
+            });
+        });
+
+        describe('when embedding text with italics', function () {
+            var text;
+
+            beforeEach(function () {
+                text = {
+                    text: "This has /emphasized statements/ in it",
+                    index: 0
+                };
+            });
+
+            it('should match up to the italics', function () {
+                var result = wiki.parsers.text(text);
+                result.matched.should.be.true;
+                result.text.should.equal("This has ");
+            });
+        });
+
+    });
+
+
+    describe('inline content', function () {
+        describe("given plain text", function () {
+
+            var text = {
+                text: "This is some plain text",
+                index: 0
+            };
+
+            it('should return plain text', function () {
+                var result = wiki.parsers.inlineContent(text);
+
+                result.matched.should.be.true;
+                result.text.should.equal(text.text);
+                result.result.nodeType.should.equal('text');
+            });
+        });
+
+        describe('given a link', function () {
+            var text = {
+                text: "WikiWord links somewhere",
+                index: 0
+            };
+
+            it('should match and return the link', function (){
+                var result = wiki.parsers.inlineContent(text);
+
+                result.matched.should.be.true;
+                result.text.should.equal("WikiWord");
+                result.result.nodeType.should.equal('link');
+            });
+        })
+    });
+
+    describe('bold', function () {
+        describe('given inline text', function () {
+            var text = {
+                text: "*This is bold text* with non bold following",
+                index: 0
+            };
+
+            it('should match the bold text', function () {
+                var result = wiki.parsers.bold(text);
+                result.matched.should.be.true;
+                result.text.should.equal("This is bold text");
+            });
+
+            it('should return node type as bold', function () {
+                var result = wiki.parsers.bold(text);
+
+                result.result.nodeType.should.equal('bold');
+            });
+        });
+
+        describe('given text with links', function () {
+            var text = {
+                text: "*This text LinksSomewhere and SomewhereElse too*",
+                index: 0
+            };
+
+            it('should match all the text', function () {
+                var result = wiki.parsers.bold(text);
+                result.matched.should.be.true;
+                result.consumed.should.equal(text.text.length);
+            });
+
+            it('should render text plus links in bold', function () {
+                var resultText = "";
+
+                var result = wiki.parsers.bold(text);
+                result.result.render(function (text) {
+                    resultText += text;
+                });
+
+                resultText.should.match(/^<b>.*<\/b>$/);                
+            });
+        });
+    });
 });
 
 
