@@ -132,7 +132,7 @@ _ = require("underscore");
                     matched: true,
                     text: result.text,
                     consumed: 0,
-                    result: result.result
+                    data: result
                 };
             }
             return result;
@@ -162,7 +162,7 @@ _ = require("underscore");
                 matched: true,
                 text: input.text.substring(input.index, internalInput.index),
                 consumed: internalInput.index - input.index,
-                result: results
+                data: results
             };
         };
     }
@@ -202,7 +202,7 @@ _ = require("underscore");
                 matched: true,
                 text: input.text.substring(input.index, internalInput.index),
                 consumed: internalInput.index - input.index,
-                result: results
+                data: results
             };
         };
         return zeroOrMoreFunction;
@@ -227,7 +227,7 @@ _ = require("underscore");
                 matched: true,
                 text: input.text.substring(input.index, internalInput.index),
                 consumed: internalInput.index - input.index,
-                result: results
+                data: results
             };
         };
         return oneOrMoreFunction;

@@ -106,6 +106,20 @@ describe("Parser utils", function () {
             var parser = peg.and(peg.match("bc"));
             parser({text: "qed", index: 0}).matched.should.be.false;
         });
+
+        it('should return the result of match as data', function () {
+            var parser = peg.and(
+                peg.onMatch(peg.match("bc"), function (result) {
+                    result.data = "we matched";
+                }));
+
+            var result = parser({text: "bcabc", index: 0});
+
+            result.data.matched.should.be.true;
+            result.data.text.should.equal("bc");
+            result.data.consumed.should.equal(2);
+            result.data.data.should.equal("we matched");
+        });
     });
 
     describe("sequence operator", function () {
@@ -134,8 +148,8 @@ describe("Parser utils", function () {
             var parser = peg.seq(peg.match('one'), peg.match('two'));
             var result = parser({ text: "onetwo", index: 0});
 
-            result.result[0].text.should.equal('one');
-            result.result[1].text.should.equal('two');            
+            result.data[0].text.should.equal('one');
+            result.data[1].text.should.equal('two');            
         });
 
         it("should not match if second one doesn't match", function () {
@@ -153,22 +167,22 @@ describe("Parser utils", function () {
 
             var parser = peg.seq(
                 peg.onMatch(peg.match("one "), function (result) {
-                    result.result = "first";
+                    result.data = "first";
                 }),
                 peg.onMatch(peg.match("two "), function (result) {
-                    result.result = 2;
+                    result.data = 2;
                 }),
                 peg.onMatch(peg.match("five"), function (result) {
-                    result.result = "third";
+                    result.data = "third";
                 }));
 
             var result = parser(text);
 
             result.matched.should.be.true;
-            result.result.length.should.equal(3);
-            result.result[0].result.should.equal('first', "First item doesn't match");
-            result.result[1].result.should.equal(2, "Second item doesn't match");
-            result.result[2].result.should.equal('third', "Third item doesn't match");
+            result.data.length.should.equal(3);
+            result.data[0].data.should.equal('first', "First item doesn't match");
+            result.data[1].data.should.equal(2, "Second item doesn't match");
+            result.data[2].data.should.equal('third', "Third item doesn't match");
         });
     });
 
@@ -195,12 +209,12 @@ describe("Parser utils", function () {
         it('should return result from matching parser', function () {
             var parser = peg.firstOf(peg.match('one'), 
                 peg.onMatch(peg.match('two'), function (result) {
-                    result.result = "I was matched";
+                    result.data = "I was matched";
                 }), 
                 peg.match('three'));
             var result = parser({text:"two three one", index: 0});
 
-            result.result.should.equal("I was matched");
+            result.data.should.equal("I was matched");
         });
     });
 
@@ -226,7 +240,7 @@ describe("Parser utils", function () {
         it('should return array of results of all matches', function () {
             var count = 5,
                 innerParser = peg.onMatch(peg.match('ab'), function (result) {
-                    result.result = count;
+                    result.data = count;
                     count = count + 3;
                 }),
                 parser = peg.zeroOrMore(innerParser);
@@ -234,12 +248,12 @@ describe("Parser utils", function () {
             var result = parser({text: "abababc", index: 0});
 
             result.matched.should.be.true;
-            result.result.should.be.an.instanceof(Array);
-            result.result.length.should.equal(3);
+            result.data.should.be.an.instanceof(Array);
+            result.data.length.should.equal(3);
 
-            result.result[0].result.should.equal(5);
-            result.result[1].result.should.equal(8);
-            result.result[2].result.should.equal(11);
+            result.data[0].data.should.equal(5);
+            result.data[1].data.should.equal(8);
+            result.data[2].data.should.equal(11);
         });
     });
 
@@ -271,7 +285,7 @@ describe("Parser utils", function () {
         it('should return array of results of all matches', function () {
             var count = 5,
                 innerParser = peg.onMatch(peg.match('ab'), function (result) {
-                    result.result = count;
+                    result.data = count;
                     count = count + 3;
                 }),
                 parser = peg.oneOrMore(innerParser);
@@ -279,12 +293,12 @@ describe("Parser utils", function () {
             var result = parser({text: "abababc", index: 0});
 
             result.matched.should.be.true;
-            result.result.should.be.an.instanceof(Array);
-            result.result.length.should.equal(3);
+            result.data.should.be.an.instanceof(Array);
+            result.data.length.should.equal(3);
 
-            result.result[0].result.should.equal(5);
-            result.result[1].result.should.equal(8);
-            result.result[2].result.should.equal(11);
+            result.data[0].data.should.equal(5);
+            result.data[1].data.should.equal(8);
+            result.data[2].data.should.equal(11);
         });
 
     });

@@ -56,12 +56,12 @@ describe("Wiki Markup parser", function () {
 
             it('should return "link" as node type', function () {
                 var result = wiki.parsers.link(text);
-                result.result.nodeType.should.equal('link');
+                result.data.nodeType.should.equal('link');
             });
 
             it('should have a render method on result', function () {
                 var result = wiki.parsers.link(text);
-                result.result.render.should.be.instanceof(Function);
+                result.data.render.should.be.instanceof(Function);
             });
         });
     });
@@ -89,12 +89,12 @@ describe("Wiki Markup parser", function () {
 
             it('should return "text" as node type', function () {
                 var result = wiki.parsers.text(text);
-                result.result.nodeType.should.equal('text');
+                result.data.nodeType.should.equal('text');
             });
 
             it('should have a render method on result', function () {
                 var result = wiki.parsers.text(text);
-                result.result.render.should.be.instanceof(Function);
+                result.data.render.should.be.instanceof(Function);
             });
         });
 
@@ -167,7 +167,7 @@ describe("Wiki Markup parser", function () {
 
                 result.matched.should.be.true;
                 result.text.should.equal(text.text);
-                result.result.nodeType.should.equal('text');
+                result.data.nodeType.should.equal('text');
             });
         });
 
@@ -179,10 +179,9 @@ describe("Wiki Markup parser", function () {
 
             it('should match and return the link', function (){
                 var result = wiki.parsers.inlineContent(text);
-
                 result.matched.should.be.true;
                 result.text.should.equal("WikiWord");
-                result.result.nodeType.should.equal('link');
+                result.data.nodeType.should.equal('link');
             });
         })
     });
@@ -202,8 +201,7 @@ describe("Wiki Markup parser", function () {
 
             it('should return node type as bold', function () {
                 var result = wiki.parsers.bold(text);
-
-                result.result.nodeType.should.equal('bold');
+                result.data.nodeType.should.equal('bold');
             });
         });
 
@@ -223,7 +221,7 @@ describe("Wiki Markup parser", function () {
                 var resultText = "";
 
                 var result = wiki.parsers.bold(text);
-                result.result.render(function (text) {
+                result.data.render(function (text) {
                     resultText += text;
                 });
 
@@ -264,11 +262,11 @@ describe("Wiki Markup parser", function () {
 
             it('should return result from matching text', function () {
                 var result = wiki.parsers.boldContent(text);
-                result.result.should.be.ok;
+                result.data.should.be.ok;
                 result.text.should.equal(text.text);
-                should.exist(result.result, "result.result");
-                should.exist(result.result.nodeType, "result.result.nodeType");
-                result.result.nodeType.should.equal('text', 'no nodeType');
+                should.exist(result.data, "result.data");
+                should.exist(result.data.nodeType, "result.data.nodeType");
+                result.data.nodeType.should.equal('text', 'no nodeType');
             });
         });
     });

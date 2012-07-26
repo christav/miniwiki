@@ -98,7 +98,7 @@ function link(input) {
 	var parser = peg.onMatch(
 		peg.seq(capWord, peg.oneOrMore(capWord)),
 		function (result) {
-			result.result = {
+			result.data = {
 				nodeType: 'link',
 				render: function (outputFunc) {
 					outputFunc("<a href='" + result.text + "'>");
@@ -119,7 +119,7 @@ function text(input) {
 
 	var result = parser(input);
 	if(result.matched) {
-		result.result = {
+		result.data = {
 			nodeType: 'text',
 			render: function (outputFunc) {
 				outputFunc(result.text);
@@ -134,18 +134,18 @@ function bold(input) {
 	var result = parser(input);
 	if(result.matched) {
 		var resultObj = {
-			_innerContent: result.result[1],
+			_innerContent: result.data[1],
 			nodeType: 'bold',
 			render: function (outputFunc) {
 				outputFunc("<b>");
-				_.each(this._innerContent.result, function (item) {
-					item.result.render(outputFunc);
+				_.each(this._innerContent.data, function (item) {
+					item.data.render(outputFunc);
 				});
 				outputFunc("</b>");
 			 }
 		};
-		result.text = result.result[1].text;
-		result.result = resultObj;
+		result.text = result.data[1].text;
+		result.data = resultObj;
 	}
 	return result;
 }
@@ -157,7 +157,7 @@ function boldContent(input) {
 		peg.firstOf(link, text));
 	var result = parser(input);
 	if(result.matched) {
-		result.result = result.result[1].result;
+		result.data = result.data[1].data;
 	}
 	return result;
 }
@@ -208,6 +208,7 @@ function eol(input) {
 }
 
 	_.extend(exports, {
+		dump: dump,
 		parsers: {
 			eol: eol,
 			whitespace: whitespace,
