@@ -68,7 +68,7 @@ function dump(obj, indent) {
 // Bold <- BoldDelim BoldContent+ BoldEnd
 // BoldContent <- !BoldEnd (link / ItalicsWithoutBold / Text)
 // ItalicsWithoutBold <- ItalicsDelim ItalicsWithoutBoldContent+ ItalicsEnd
-// ItalicsWithoutBoldContent <- !ItalicsEnd (Link / Text)
+// ItalicsWithoutBoldContent <- !(ItalicsEnd / BoldEnd) (Link / Text)
 // Italics <- ItalicsDelim ItalicsContent+ ItalicsEnd
 // ItalicsContent <- !ItalicsEnd (Link / BoldWithoutItalics / Text)
 // BoldWithoutItalics <- BoldDelim BoldWithoutItalicsContent+ BoldEnd
@@ -154,7 +154,49 @@ function boldContent(input) {
 	// BoldContent <- !BoldEnd (link / ItalicsWithoutBold / Text)
 	var parser = peg.seq(
 		peg.not(boldEnd),
-		peg.firstOf(link, text));
+		peg.firstOf(link, italicsWithoutBold, text));
+	var result = parser(input);
+	if(result.matched) {
+		result.data = result.data[1].data;
+	}
+	return result;
+}
+
+function italicsWithoutBold(input) {
+	// ItalicsWithoutBold <- ItalicsDelim ItalicsWithoutBoldContent+ (ItalicsEnd / &BoldEnd)
+
+	var parser = peg.seq(italicsDelim, 
+		peg.oneOrMore(italicsWithoutBoldContent), 
+		peg.firstOf(italicsEnd, peg.and(boldEnd))
+	);
+
+	var result = parser(input);
+	if(result.matched) {
+		var resultObj = {
+			_innerContent: result.data[1],
+			nodeType: 'italics',
+			render: function (outputFunc) { 
+				outputFunc("<i>");
+				_.each(this._innerContent.data, function (item) {
+					item.data.render(outputFunc);
+				});
+				outputFunc("</i>");
+			}
+		};
+		result.text = result.data[1].text;
+		result.data = resultObj;
+	}	
+	return result;
+}
+
+function italicsWithoutBoldContent(input) {
+	// ItalicsWithoutBoldContent <- !(ItalicsEnd / &BoldEnd) (Link / Text)	
+	var parser = peg.seq(
+		peg.not(
+			peg.firstOf(italicsEnd, peg.and(boldEnd))
+		), 
+		peg.firstOf(link, text)
+	);
 	var result = parser(input);
 	if(result.matched) {
 		result.data = result.data[1].data;
@@ -174,6 +216,11 @@ function boldEnd(input) {
 
 function italicsDelim(input) {
 	var parser = peg.match('/');
+	return parser(input);
+}
+
+function italicsEnd(input) {
+	var parser = peg.firstOf(italicsDelim, peg.and(eol));
 	return parser(input);
 }
 

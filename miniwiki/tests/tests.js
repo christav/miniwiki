@@ -4,6 +4,10 @@ var wiki = require('./../lib/wiki');
 var peg = require('../lib/peg');
 var should = require('should');
 
+function dump(obj) {
+    console.log("result = " + wiki.dump(obj));
+}
+
 describe("Libraries", function () {
     describe("Wiki library", function () {
         it("should be present", function () {
@@ -246,7 +250,53 @@ describe("Wiki Markup parser", function () {
             it('should match text up to end of line', function () {
                 wiki.parsers.bold(text).text.should.equal("This is bold text");
             });
-        })
+        });
+
+        describe("given text that includes italic text", function () {
+            var text = {
+                text: "*this is bold /and emphasised/ too*",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.bold(text).matched.should.be.true;
+            });
+
+            it('should render italic text in italics', function () {
+                var resultText = "";
+
+                var result = wiki.parsers.bold(text);
+                result.data.render(function (text) {
+                    resultText += text;
+                });
+
+                resultText.should.match(/^<b>.*<\/b>$/);
+                resultText.should.match(/<i>and emphasised<\/i>/);
+            });
+
+        });
+
+        describe("Given text that drops the end italics", function () {
+            var text = {
+                text: "*this is bold /and emphasised too*",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.bold(text).matched.should.be.true;
+            });
+
+            it('should close the italics and bold in the correct order', function () {
+                var resultText = "";
+
+                var result = wiki.parsers.bold(text);
+                result.data.render(function (text) {
+                    resultText += text;
+                });
+
+                resultText.should.match(/^<b>.*<i>.*<\/i><\/b>$/);
+            });
+        });
     });
 
     describe("boldContent", function () {
