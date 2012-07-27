@@ -187,7 +187,57 @@ describe("Wiki Markup parser", function () {
                 result.text.should.equal("WikiWord");
                 result.data.nodeType.should.equal('link');
             });
-        })
+        });
+    });
+
+    describe("paragraph", function () {
+        describe("given plain text", function () {
+            var text = {
+                text: "This is ordinary text\n",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.paragraph(text).matched.should.be.true;
+            });
+
+            it('should render wrapped in a p tag', function () {
+                var resultText = "";
+                var result = wiki.parsers.paragraph(text);
+                result.data.render(function (text) {
+                    resultText += text;
+                });
+
+                resultText.should.match(/^<p>.*<\/p>$/);
+                resultText.should.match(/This is ordinary text/);
+            });
+        });
+
+        describe("Given text with bold, italics and links", function () {
+            var text = {
+                text: "This is *bold text* that /LinksSomewhere important/\n" +
+                "and DoesMore on a *second line*\n",
+                index: 0
+            };
+
+            it('should match the first line', function () {
+                var result = wiki.parsers.paragraph(text);
+                result.matched.should.be.true;
+
+                result.consumed.should.equal(text.text.indexOf('\n') + 1);
+            });
+
+            it('should render properly nested', function() {
+                var resultText = "";
+                var result = wiki.parsers.paragraph(text);
+                result.data.render(function (text) {
+                    resultText += text;
+                });
+
+                resultText.should.match(/^<p>.*<b>bold text<\/b>.*<i>.*<a.*>.*<\/a>.*<\/i><\/p>/);
+            });
+
+        });
     });
 
     describe('bold', function () {

@@ -89,6 +89,24 @@ function dump(obj, indent) {
 // Whitespace <- " " / "\t"
 // EOL <- \r\n / \n / END
 
+function paragraph(input) {
+	var parser = peg.seq(
+		peg.zeroOrMore(inlineContent),
+		eol);
+
+	var result = parser(input);
+	if(result.matched) {
+		var resultObj = {
+			_innerContent: result.data[0],
+			nodeType: "paragraph",
+			text: result.text,
+			render: renderFunc("p")
+		};
+		result.data = resultObj;
+	}
+	return result;
+}
+
 function inlineContent(input) {
 	var parser = peg.firstOf(bold, italics, link, text);
 	return parser(input);
@@ -336,7 +354,7 @@ function renderFunc(wrapper) {
 			inlineContent: inlineContent,
 			italics: italics,
 			bold: bold,
-			// paragraph: paragraph,
+			paragraph: paragraph,
 			// headerIntro: headerIntro,
 			// header: header,
 			// block: block,
