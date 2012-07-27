@@ -1,60 +1,12 @@
 // Function library for dealing with wikitext
 // to html formatting
 
+
 (function () {
+	"use strict";
+
 	var _ = require("underscore");
 	var peg = require("../peg");
-
-function dump(obj, indent) {
-	var spacing, tab, result;
-
-	if (!indent) {
-		indent = 0;
-	}
-	spacing = new Array(indent * 4).join(' ');
-	tab = "    ";
-
-	if(obj === undefined) {
-		return "undefined";
-	}
-	if(obj === null) {
-		return "null";
-	}
-
-	if(typeof obj === 'boolean') {
-		return obj.toString();
-	}
-	if(typeof obj === 'string') {
-		return '"' + obj + '"';
-	}
-	if(typeof obj === 'number') {
-		return obj.toString();
-	}
-	if(typeof obj === 'function') {
-		return "Function";
-	}
-
-	if(obj instanceof Array) {
-		result = "[\n";
-		obj.forEach(function (item) {
-			result += spacing + tab + dump(item, indent + 1) + ",\n"
-		});
-		result += spacing + "]";
-		return result;
-	}
-	if(typeof obj === 'object')
-	{
-		result = "{\n";
-		Object.keys(obj).forEach(function (propName) {
-			result += spacing + tab + propName + ": ";
-			result += dump(obj[propName], indent + 1);
-			result += ",\n";
-		})
-		result += spacing + "}";
-		return result;
-	}
-	return 'object ' + obj + ' is not handled correctly';
-}
 
 //
 // PEG Parser for the wiki markup
@@ -87,7 +39,7 @@ function dump(obj, indent) {
 // Lowercase <- [a-z]
 // Spacing <- Whitespace*
 // Whitespace <- " " / "\t"
-// EOL <- \r\n / \n / END
+// EOL <- \r\n / \n
 
 function htmlText(input) {
 	var parser = peg.seq(peg.zeroOrMore(block), peg.end);
@@ -418,8 +370,23 @@ function renderFunc(wrapper) {
 	};
 }
 
+function toHtml(wikiMarkup, renderFunc) {
+	// Top level entry to wiki parser. Takes string of wiki markup,
+	// returns the corresponding HTML. Calls the passed in
+	// renderFunc repeatedly to return the resulting HTML.
+
+	var input = {
+		text: wikiMarkup + "\n",
+		index: 0
+	};
+
+	var result = htmlText(input);
+	result.data.render(renderFunc);
+}
+
 	_.extend(exports, {
-		dump: dump,
+		toHtml: toHtml,
+		
 		parsers: {
 			eol: eol,
 			whitespace: whitespace,

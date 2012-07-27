@@ -24,6 +24,23 @@ describe("Libraries", function () {
     });
 });
 
+describe("Wiki parser", function () {
+    describe("basic text", function () {
+
+        var text = "This is some text which should end up as a paragraph";
+
+        it('should return as paragraph wrapped in div', function () {
+            var resultText = "";
+            wiki.toHtml(text, function (text) {
+                resultText += text;
+            });
+
+            resultText.should.match(/^<div><p>.*<\/p><\/div>$/);
+        });
+    });
+})
+
+
 describe("Wiki Markup parser", function () {
     describe("EOL", function () {
         it('should match end of line', function () {
