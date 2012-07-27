@@ -8,6 +8,14 @@ function dump(obj) {
     console.log("result = " + wiki.dump(obj));
 }
 
+function render(result) {
+    var renderedText = "";
+    result.data.render(function (text) {
+        renderedText += text;
+    });
+    return renderedText;
+}
+
 describe("Libraries", function () {
     describe("Wiki library", function () {
         it("should be present", function () {
@@ -202,11 +210,8 @@ describe("Wiki Markup parser", function () {
             });
 
             it('should render wrapped in a p tag', function () {
-                var resultText = "";
                 var result = wiki.parsers.paragraph(text);
-                result.data.render(function (text) {
-                    resultText += text;
-                });
+                var resultText = render(result);
 
                 resultText.should.match(/^<p>.*<\/p>$/);
                 resultText.should.match(/This is ordinary text/);
@@ -228,11 +233,9 @@ describe("Wiki Markup parser", function () {
             });
 
             it('should render properly nested', function() {
-                var resultText = "";
+                
                 var result = wiki.parsers.paragraph(text);
-                result.data.render(function (text) {
-                    resultText += text;
-                });
+                var resultText = render(result);
 
                 resultText.should.match(/^<p>.*<b>bold text<\/b>.*<i>.*<a.*>.*<\/a>.*<\/i><\/p>/);
             });
@@ -272,12 +275,8 @@ describe("Wiki Markup parser", function () {
             });
 
             it('should render text plus links in bold', function () {
-                var resultText = "";
-
                 var result = wiki.parsers.bold(text);
-                result.data.render(function (text) {
-                    resultText += text;
-                });
+                var resultText = render(result);
 
                 resultText.should.match(/^<b>.*<\/b>$/);
                 resultText.should.match(/This text/);
@@ -313,12 +312,7 @@ describe("Wiki Markup parser", function () {
             });
 
             it('should render italic text in italics', function () {
-                var resultText = "";
-
-                var result = wiki.parsers.bold(text);
-                result.data.render(function (text) {
-                    resultText += text;
-                });
+                var resultText = render(wiki.parsers.bold(text));
 
                 resultText.should.match(/^<b>.*<\/b>$/);
                 resultText.should.match(/<i>and emphasised<\/i>/);
@@ -337,12 +331,7 @@ describe("Wiki Markup parser", function () {
             });
 
             it('should close the italics and bold in the correct order', function () {
-                var resultText = "";
-
-                var result = wiki.parsers.bold(text);
-                result.data.render(function (text) {
-                    resultText += text;
-                });
+                var resultText = render(wiki.parsers.bold(text));
 
                 resultText.should.match(/^<b>.*<i>.*<\/i><\/b>$/);
             });
@@ -381,12 +370,7 @@ describe("Wiki Markup parser", function () {
             });
 
             it('should render text plus links in italics', function () {
-                var resultText = "";
-
-                var result = wiki.parsers.italics(text);
-                result.data.render(function (text) {
-                    resultText += text;
-                });
+                var resultText = render(wiki.parsers.italics(text));
 
                 resultText.should.match(/^<i>.*<\/i>$/);
                 resultText.should.match(/This text/);
@@ -422,12 +406,7 @@ describe("Wiki Markup parser", function () {
             });
 
             it('should render bold text in bold', function () {
-                var resultText = "";
-
-                var result = wiki.parsers.italics(text);
-                result.data.render(function (text) {
-                    resultText += text;
-                });
+                var resultText = render(wiki.parsers.italics(text));
 
                 resultText.should.match(/^<i>.*<\/i>$/);
                 resultText.should.match(/<b>and bold<\/b>/);
@@ -446,17 +425,101 @@ describe("Wiki Markup parser", function () {
             });
 
             it('should close the italics and bold in the correct order', function () {
-                var resultText = "";
-
-                var result = wiki.parsers.italics(text);
-                result.data.render(function (text) {
-                    resultText += text;
-                });
+                var resultText = render(wiki.parsers.italics(text));
 
                 resultText.should.match(/^<i>.*<b>.*<\/b><\/i>$/);
             });
         });
     });
+
+    describe('header', function () {
+        describe('given four exclamation marks', function () {
+            var text = {
+                text: "!!!! A header!",
+                index: 0
+            };
+
+            it('should match', function () {
+                var result = wiki.parsers.header(text);
+                result.matched.should.be.true;
+            });
+
+            it('should render as h1', function () {
+                var resultText = render(wiki.parsers.header(text));
+
+                resultText.should.match(/^<h1>.*<\/h1>$/);
+            });
+        });
+
+        describe('given three exclamation marks', function () {
+            var text = {
+                text: "!!! A header!",
+                index: 0
+            };
+
+            it('should match', function () {
+                var result = wiki.parsers.header(text);
+                result.matched.should.be.true;
+            });
+
+            it('should render as h2', function () {
+                var resultText = render(wiki.parsers.header(text));
+
+                resultText.should.match(/^<h2>.*<\/h2>$/);
+            });
+        });
+
+        describe('given two exclamation marks', function () {
+            var text = {
+                text: "!! A header!",
+                index: 0
+            };
+
+            it('should match', function () {
+                var result = wiki.parsers.header(text);
+                result.matched.should.be.true;
+            });
+
+            it('should render as h3', function () {
+                var resultText = render(wiki.parsers.header(text));
+
+                resultText.should.match(/^<h3>.*<\/h3>$/);
+            });
+        });
+    });
+
+    describe("block", function () {
+        describe("given header", function () {
+            var text = {
+                text: "!!!! Welcome to the /wiki/",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.block(text).matched.should.be.true;
+            });
+
+            it('should render as a header', function () {
+                var renderedText = render(wiki.parsers.block(text));
+
+                renderedText.should.match(/^<h1>Welcome to the <i>wiki<\/i><\/h1>$/);
+            });
+        });
+
+        describe('given text', function () {
+            var text = {
+                text:"This is *not a header*, LookAtHeaders instead",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.block(text).matched.should.be.true;
+            });
+
+            it('should render as a paragraph', function () {
+                var renderedText = render(wiki.parsers.block(text));
+                renderedText.should.match(/^<p>.*<\/p>$/);
+            });
+        });
+    });
 });
-
-

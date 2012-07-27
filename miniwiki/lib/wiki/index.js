@@ -61,7 +61,7 @@ function dump(obj, indent) {
 //
 // HTMLText <- Block* END
 // Block <- Header / Paragraph
-// Header <- HeaderIntro InlineContent* EOL
+// Header <- HeaderIntro InlineContent+ EOL
 // HeaderIntro <- (H1 / H2 / H3) Spacing
 // Paragraph <- InlineContent* EOL
 // InlineContent <- Bold / Italics / Link / Text
@@ -88,6 +88,33 @@ function dump(obj, indent) {
 // Spacing <- Whitespace*
 // Whitespace <- " " / "\t"
 // EOL <- \r\n / \n / END
+
+function block(input) {
+	var parser = peg.firstOf(header, paragraph);
+	return parser(input);
+}
+
+function header(input) {
+	var parser = peg.seq(headerIntro, peg.oneOrMore(inlineContent), eol);
+	var result = parser(input);
+	if(result.matched) {
+		result.data = {
+			_innerContent: result.data[1],
+			nodeType: 'header',
+			render: renderFunc(result.data[0].data.headerType)
+		};
+	}
+	return result;
+}
+
+function headerIntro(input) {
+	var parser = peg.seq(peg.firstOf(h1, h2, h3), spacing);
+	var result = parser(input);
+	if (result.matched) {
+		result.data = result.data[0].data;
+	}
+	return result;
+}
 
 function paragraph(input) {
 	var parser = peg.seq(
@@ -297,6 +324,39 @@ function italicsEnd(input) {
 	return parser(input);
 }
 
+function h1(input) {
+	var parser = peg.match("!!!!");
+	var result = parser(input);
+	if (result.matched) {
+		result.data = {
+			headerType: 'h1'
+		};
+	}
+	return result;
+}
+
+function h2(input) {
+	var parser = peg.match("!!!");
+	var result = parser(input);
+	if (result.matched) {
+		result.data = {
+			headerType: 'h2'
+		};
+	}
+	return result;
+}
+
+function h3(input) {
+	var parser = peg.match("!!");
+	var result = parser(input);
+	if (result.matched) {
+		result.data = {
+			headerType: 'h3'
+		};
+	}
+	return result;
+}
+
 function capWord(input) {
 	var parser = peg.seq(initialCap, peg.oneOrMore(lowercase));
 	return parser(input);
@@ -346,18 +406,14 @@ function renderFunc(wrapper) {
 			spacing: spacing,
 			lowercase: lowercase,
 			initialCap: initialCap,
-			// h3 : h3,
-			// h2 : h2,
-			// h1 : h1,
 			text: text,
 			link: link,
 			inlineContent: inlineContent,
 			italics: italics,
 			bold: bold,
 			paragraph: paragraph,
-			// headerIntro: headerIntro,
-			// header: header,
-			// block: block,
+			header: header,
+			block: block,
 			// htmlText: htmlText
 		}
 	});
