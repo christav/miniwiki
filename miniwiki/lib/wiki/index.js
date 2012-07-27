@@ -60,7 +60,7 @@ function dump(obj, indent) {
 // PEG Parser for the wiki markup
 //
 // HTMLText <- Block* END
-// Block <- Header / Paragraph
+// Block <- (Header / Paragraph) (Spacing EOL)*
 // Header <- HeaderIntro InlineContent+ EOL
 // HeaderIntro <- (H1 / H2 / H3) Spacing
 // Paragraph <- InlineContent* EOL
@@ -89,9 +89,29 @@ function dump(obj, indent) {
 // Whitespace <- " " / "\t"
 // EOL <- \r\n / \n / END
 
+function htmlText(input) {
+	var parser = peg.seq(peg.zeroOrMore(block), peg.end);
+	var result = parser(input);
+	if(result.matched) {
+		result.data = {
+			_innerContent: result.data[0],
+			nodeType: 'htmlText',
+			render: renderFunc("div")
+		};
+	}
+	return result;
+}
+
 function block(input) {
-	var parser = peg.firstOf(header, paragraph);
-	return parser(input);
+	var parser = peg.seq(
+		peg.firstOf(header, paragraph),
+		peg.zeroOrMore(peg.seq(spacing, eol)));
+
+	var result = parser(input);
+	if(result.matched) {
+		result.data = result.data[0].data;
+	}
+	return result;
 }
 
 function header(input) {
@@ -383,7 +403,7 @@ function whitespace(input) {
 }
 
 function eol(input) {
-	var parser = peg.firstOf(peg.match('\r\n'), peg.match('\n'), peg.end);
+	var parser = peg.firstOf(peg.match('\r\n'), peg.match('\n'));
 	return parser(input);
 }
 
@@ -414,7 +434,7 @@ function renderFunc(wrapper) {
 			paragraph: paragraph,
 			header: header,
 			block: block,
-			// htmlText: htmlText
+			htmlText: htmlText
 		}
 	});
 

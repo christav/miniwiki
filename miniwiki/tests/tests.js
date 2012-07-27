@@ -33,12 +33,6 @@ describe("Wiki Markup parser", function () {
         it('should not match not end of line', function () {
             wiki.parsers.eol({text: "something", index: 5}).matched.should.be.false;
         });
-
-        it('should match end of input without consuming anything', function () {
-            var result = wiki.parsers.eol({ text: "something", index: "something".length});
-            result.matched.should.be.true;
-            result.consumed.should.equal(0);
-        });
     });
 
     describe("link", function () {
@@ -288,7 +282,7 @@ describe("Wiki Markup parser", function () {
 
         describe("given text that's missing bold end", function () {
             var text = {
-                text: "*This is bold text",
+                text: "*This is bold text\n",
                 index: 0
             };
 
@@ -382,7 +376,7 @@ describe("Wiki Markup parser", function () {
 
         describe("given text that's missing italics end", function () {
             var text = {
-                text: "/This is italic text",
+                text: "/This is italic text\r\n",
                 index: 0
             };
 
@@ -435,7 +429,7 @@ describe("Wiki Markup parser", function () {
     describe('header', function () {
         describe('given four exclamation marks', function () {
             var text = {
-                text: "!!!! A header!",
+                text: "!!!! A header!\n",
                 index: 0
             };
 
@@ -453,7 +447,7 @@ describe("Wiki Markup parser", function () {
 
         describe('given three exclamation marks', function () {
             var text = {
-                text: "!!! A header!",
+                text: "!!! A header!\n",
                 index: 0
             };
 
@@ -471,7 +465,7 @@ describe("Wiki Markup parser", function () {
 
         describe('given two exclamation marks', function () {
             var text = {
-                text: "!! A header!",
+                text: "!! A header!\n",
                 index: 0
             };
 
@@ -488,10 +482,27 @@ describe("Wiki Markup parser", function () {
         });
     });
 
+    describe('eating whitespace', function () {
+
+        it('should match whitespace', function () {
+            var parser = peg.oneOrMore(peg.seq(wiki.parsers.spacing, wiki.parsers.eol));
+
+            var text = {
+                text: "  \r\n  \r\n\r\n",
+                index: 0
+            };
+
+            var result = parser(text);
+            result.matched.should.be.true;
+            result.consumed.should.equal(text.text.length);
+
+        });
+    });
+
     describe("block", function () {
         describe("given header", function () {
             var text = {
-                text: "!!!! Welcome to the /wiki/",
+                text: "!!!! Welcome to the /wiki/\r\n",
                 index: 0
             };
 
@@ -508,7 +519,7 @@ describe("Wiki Markup parser", function () {
 
         describe('given text', function () {
             var text = {
-                text:"This is *not a header*, LookAtHeaders instead",
+                text:"This is *not a header*, LookAtHeaders instead\r\n",
                 index: 0
             };
 
@@ -521,5 +532,46 @@ describe("Wiki Markup parser", function () {
                 renderedText.should.match(/^<p>.*<\/p>$/);
             });
         });
+
+        describe("given text with extra blank lines and whitespace", function () {
+            var text = {
+                text: "This is some text\n\n   \n",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.block(text).matched.should.be.true;
+            });
+
+            it('should consume the trailing whitespace', function () {
+                wiki.parsers.block(text).consumed.should.equal(text.text.length);
+            });
+        })
     });
+
+    describe('htmlText', function () {
+        describe('given a full set of text', function () {
+            var text = {
+                text: "!!!! Welcome to the Wiki Test suite\n" +
+                "This is /sample text/ to demonstrate that we match" +
+                " multiple blocks.\n" +
+                "\r\n\r\n" +
+                "*This should be a second block\n" +
+                "!! with a small header at the end\n",
+                index: 0
+            };
+
+            it('should match', function () {
+                var parser = wiki.parsers.htmlText;
+                var result = parser(text);
+                result.matched.should.be.true;
+                result.consumed.should.equal(text.text.length);
+            });
+
+            it('should render in a div', function () {
+                var resultText = render(wiki.parsers.htmlText(text));
+                resultText.should.match(/^<div>.*<\/div>/);
+            });
+        });
+    })
 });
