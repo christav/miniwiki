@@ -72,7 +72,7 @@ function dump(obj, indent) {
 // Italics <- ItalicsDelim ItalicsContent+ ItalicsEnd
 // ItalicsContent <- !ItalicsEnd (Link / BoldWithoutItalics / Text)
 // BoldWithoutItalics <- BoldDelim BoldWithoutItalicsContent+ BoldEnd
-// BoldWithoutItalicsContent <- !BoldEnd (Link / Text)
+// BoldWithoutItalicsContent <- !(ItalicsEnd / BoldEnd) (Link / Text)
 // Link <- CapWord CapWord+
 // Text <- (!(EOL / BoldDelim / ItalicsDelim / Link) .)+
 // CapWord <- InitialCap lowercase+
@@ -90,7 +90,7 @@ function dump(obj, indent) {
 // EOL <- \r\n / \n / END
 
 function inlineContent(input) {
-	var parser = peg.firstOf(link, text);
+	var parser = peg.firstOf(bold, italics, link, text);
 	return parser(input);
 }
 
@@ -192,6 +192,73 @@ function italicsWithoutBoldContent(input) {
 	return result;
 }
 
+// Italics <- ItalicsDelim ItalicsContent+ ItalicsEnd
+// BoldWithoutItalicsContent <- !BoldEnd (Link / Text)
+
+function italics(input) {
+	var parser = peg.seq(italicsDelim, peg.oneOrMore(italicsContent), italicsEnd);
+	var result = parser(input);
+	if(result.matched) {
+		var resultObj = {
+			_innerContent: result.data[1],
+			nodeType: 'italics',
+			render: renderFunc("i")
+		};
+		result.text = result.data[1].text;
+		result.data = resultObj;
+	}
+	return result;
+}
+
+function italicsContent(input) {
+	// ItalicsContent <- !ItalicsEnd (Link / BoldWithoutItalics / Text)
+	var parser = peg.seq(
+		peg.not(italicsEnd),
+		peg.firstOf(link, boldWithoutItalics, text));
+	var result = parser(input);
+	if(result.matched) {
+		result.data = result.data[1].data;
+	}
+	return result;
+}
+
+function boldWithoutItalics(input) {
+	// BoldWithoutItalics <- BoldDelim BoldWithoutItalicsContent+ BoldEnd
+
+	var parser = peg.seq(boldDelim, 
+		peg.oneOrMore(boldWithoutItalicsContent), 
+		peg.firstOf(boldEnd, peg.and(italicsEnd))
+	);
+
+	var result = parser(input);
+	if(result.matched) {
+		var resultObj = {
+			_innerContent: result.data[1],
+			nodeType: 'bold',
+			render: renderFunc("b")
+		};
+		result.text = result.data[1].text;
+		result.data = resultObj;
+	}	
+	return result;
+}
+
+function boldWithoutItalicsContent(input) {
+	// ItalicsWithoutBoldContent <- !(ItalicsEnd / &BoldEnd) (Link / Text)	
+	var parser = peg.seq(
+		peg.not(
+			peg.firstOf(italicsEnd, peg.and(boldEnd))
+		), 
+		peg.firstOf(link, text)
+	);
+	var result = parser(input);
+	if(result.matched) {
+		result.data = result.data[1].data;
+	}
+	return result;
+}
+
+
 function boldDelim(input) {
 	var parser = peg.match('*');
 	return parser(input);
@@ -264,14 +331,10 @@ function renderFunc(wrapper) {
 			// h3 : h3,
 			// h2 : h2,
 			// h1 : h1,
-			// italicsEnd: italicsEnd,
-			// boldEnd: boldEnd,
-			capWord: capWord,
 			text: text,
 			link: link,
 			inlineContent: inlineContent,
-			// italics: italics,
-			boldContent: boldContent,
+			italics: italics,
 			bold: bold,
 			// paragraph: paragraph,
 			// headerIntro: headerIntro,

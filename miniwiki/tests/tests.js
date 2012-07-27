@@ -299,24 +299,111 @@ describe("Wiki Markup parser", function () {
         });
     });
 
-    describe("boldContent", function () {
-        describe('given text', function () {
+    describe('italics', function () {
+        describe('given inline text', function () {
             var text = {
-                text: "This is some text",
+                text: "/This is italic text/ with non italics following",
+                index: 0
+            };
+
+            it('should match the italics text', function () {
+                var result = wiki.parsers.italics(text);
+                result.matched.should.be.true;
+                result.text.should.equal("This is italic text");
+            });
+
+            it('should return node type as italics', function () {
+                var result = wiki.parsers.italics(text);
+                result.data.nodeType.should.equal('italics');
+            });
+        });
+
+        describe('given text with links', function () {
+            var text = {
+                text: "/This text LinksSomewhere and SomewhereElse too/",
+                index: 0
+            };
+
+            it('should match all the text', function () {
+                var result = wiki.parsers.italics(text);
+                result.matched.should.be.true;
+                result.consumed.should.equal(text.text.length);
+            });
+
+            it('should render text plus links in italics', function () {
+                var resultText = "";
+
+                var result = wiki.parsers.italics(text);
+                result.data.render(function (text) {
+                    resultText += text;
+                });
+
+                resultText.should.match(/^<i>.*<\/i>$/);
+                resultText.should.match(/This text/);
+                resultText.should.match(/too/);
+                resultText.should.match(/<a.*>LinksSomewhere<\/a>/);
+                resultText.should.match(/<a.*>SomewhereElse<\/a>/);
+            });
+        });
+
+        describe("given text that's missing italics end", function () {
+            var text = {
+                text: "/This is italic text",
                 index: 0
             };
 
             it('should match', function () {
-                wiki.parsers.boldContent(text).matched.should.be.true;
+                wiki.parsers.italics(text).matched.should.be.true;
             });
 
-            it('should return result from matching text', function () {
-                var result = wiki.parsers.boldContent(text);
-                result.data.should.be.ok;
-                result.text.should.equal(text.text);
-                should.exist(result.data, "result.data");
-                should.exist(result.data.nodeType, "result.data.nodeType");
-                result.data.nodeType.should.equal('text', 'no nodeType');
+            it('should match text up to end of line', function () {
+                wiki.parsers.italics(text).text.should.equal("This is italic text");
+            });
+        });
+
+        describe("given text that includes bold text", function () {
+            var text = {
+                text: "/this is italic *and bold* too/",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.italics(text).matched.should.be.true;
+            });
+
+            it('should render bold text in bold', function () {
+                var resultText = "";
+
+                var result = wiki.parsers.italics(text);
+                result.data.render(function (text) {
+                    resultText += text;
+                });
+
+                resultText.should.match(/^<i>.*<\/i>$/);
+                resultText.should.match(/<b>and bold<\/b>/);
+            });
+
+        });
+
+        describe("Given text that drops the end bold", function () {
+            var text = {
+                text: "/this is italic *and bold too/",
+                index: 0
+            };
+
+            it('should match', function () {
+                wiki.parsers.italics(text).matched.should.be.true;
+            });
+
+            it('should close the italics and bold in the correct order', function () {
+                var resultText = "";
+
+                var result = wiki.parsers.italics(text);
+                result.data.render(function (text) {
+                    resultText += text;
+                });
+
+                resultText.should.match(/^<i>.*<b>.*<\/b><\/i>$/);
             });
         });
     });
