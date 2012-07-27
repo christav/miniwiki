@@ -4,5 +4,9 @@
  */
 
 exports.index = function(req, res){
-  res.render('index', { title: 'Express' });
+  res.redirect("/HomePage");
+};
+
+exports.page = function(req, res) {
+    res.render('page', {page: req.param('pageName')});
 };
