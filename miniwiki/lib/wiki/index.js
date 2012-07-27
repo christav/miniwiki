@@ -136,13 +136,7 @@ function bold(input) {
 		var resultObj = {
 			_innerContent: result.data[1],
 			nodeType: 'bold',
-			render: function (outputFunc) {
-				outputFunc("<b>");
-				_.each(this._innerContent.data, function (item) {
-					item.data.render(outputFunc);
-				});
-				outputFunc("</b>");
-			 }
+			render: renderFunc("b")
 		};
 		result.text = result.data[1].text;
 		result.data = resultObj;
@@ -175,13 +169,7 @@ function italicsWithoutBold(input) {
 		var resultObj = {
 			_innerContent: result.data[1],
 			nodeType: 'italics',
-			render: function (outputFunc) { 
-				outputFunc("<i>");
-				_.each(this._innerContent.data, function (item) {
-					item.data.render(outputFunc);
-				});
-				outputFunc("</i>");
-			}
+			render: renderFunc("i")
 		};
 		result.text = result.data[1].text;
 		result.data = resultObj;
@@ -252,6 +240,17 @@ function whitespace(input) {
 function eol(input) {
 	var parser = peg.firstOf(peg.match('\r\n'), peg.match('\n'), peg.end);
 	return parser(input);
+}
+
+function renderFunc(wrapper) {
+	// Helper function to generate renderers that wrap collections of inner items
+	return function (outputFunc) {
+		outputFunc("<" + wrapper + ">");
+		_.each(this._innerContent.data, function (item) {
+			item.data.render(outputFunc);
+		});
+		outputFunc("</" + wrapper + ">");
+	};
 }
 
 	_.extend(exports, {
