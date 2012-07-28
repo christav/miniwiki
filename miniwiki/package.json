@@ -6,7 +6,8 @@
     "express": "3.0.0beta7",
     "handlebars": "*",
     "hbs": "*",
-    "underscore": "*"
+    "underscore": "*",
+    "azure": "*"
   },
   "devDependencies": {
     "mocha" : "*",
