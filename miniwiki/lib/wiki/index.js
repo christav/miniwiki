@@ -1,5 +1,6 @@
 (function () {
 	var parser = require('./parser'),
+		models = requre('./models'),
 		_ = require('underscore');
 
 	function toHtml(text, outputFunc) {
@@ -16,6 +17,7 @@
 
 	_.extend(exports, {
 		toHtml: toHtml,
+		readPage: models.readPage,
 		parsers: parser
 	});
 })();
