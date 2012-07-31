@@ -12,42 +12,6 @@ var wiki = require("./../lib/wiki"),
 
 var pagePath = "./pages";
 
-// Utility function to clear out the disk
-function clearRepository(done) {
-    flow.exec(
-        function getPathExistence() {
-            path.exists(pagePath, this);
-        },
-        function branchIfPathExists(exists) {
-            var that = this;
-            if(exists) {
-                flow.exec(
-                    function readCurrentContents() {
-                        fs.readdir(pagePath, this);
-                    },
-                    function deleteAllFiles(err, files) {
-                        if(files.length === 0) {
-                            this();
-                        } else {
-                            files.forEach(function (fileName) {
-                                fs.unlink(path.join(pagePath, fileName), this.MULTI());
-                            }, this);
-                        }
-                    },
-                    function () {
-                        that();
-                    }
-                );
-            } else {
-                this();
-            }
-        },
-        function () { 
-            done();
-        }
-    );
-}
-
 describe('file repository', function () {
 
     describe('when the storage is empty', function () {
@@ -68,47 +32,29 @@ describe('file repository', function () {
 
     describe("when there's data on the disk", function () {
 
-        // Sample data
         var pages = [
             {
                 name: "PageOne",
-                history: [{editor: "Chris", editedOn: new Date(2005, 3, 3, 15, 25)}],
-                pageData: {
-                    wikiText: "This is PageOne",
-                }
+                revisions: [
+                    {
+                        editor: "Chris",
+                        editedOn: new Date(2005, 3, 3, 15, 25),
+                        wikiText: "This is PageOne"
+                    }
+                ]
             },
             {
                 name: "PageTwo",
-                history: [{editor: "ChrisTav", editedOn: new Date(2010, 4, 16, 12, 0)}],
-                pageData: {
-                    wikiText: "Here is PageTwo *with markup*",
-                }
+                revisions: [
+                    {
+                        editor: "ChrisTav",
+                        editedOn: new Date(2010, 4, 16, 12, 0),
+                        wikiText: "Here is PageTwo *with markup*"
+                    }
+                ]
             }
         ];
 
-        function writeHistory(page, callback) {
-            var historyFile = wiki.fileRepository.historyFileName(page.name);
-            var historyData = JSON.stringify(page.history);
-            fs.writeFile(historyFile, historyData, callback);
-        }
-
-        function writeRevision(page, callback) {
-            var revisionFile = wiki.fileRepository.revisionFileName(page.name, 1);
-
-            page.htmlText = "";
-            wiki.toHtml(page.wikiText, function (text) {
-                page.htmlText += text;
-            });
-
-            var revisionData = JSON.stringify(page.pageData);
-
-            fs.writeFile(revisionFile, revisionData, callback);
-        }
-
-        function writePage(page, index, done) {
-            writeHistory(page, done);
-            writeRevision(page, done);
-        }
 
         beforeEach(function (done) {
             var that = this;
@@ -117,13 +63,12 @@ describe('file repository', function () {
                 function() {
                     that.repo.testSupport.clearRepository(this);
                 },
-                function writePages() {
-                    pages.forEach(function (page, index) {
-                        writePage(page, index, this.MULTI());
+                function () {
+                    pages.forEach(function (page) {
+                        that.repo.testSupport.writePage(page, this.MULTI());
                     }, this);
                 },
                 function () {
-                    that.repo = wiki.fileRepository;
                     done();
                 }
             );

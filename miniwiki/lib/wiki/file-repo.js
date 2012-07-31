@@ -4,7 +4,8 @@
 	var _ = require("underscore"),
     fs = require("fs"),
     path = require("path"),
-    flow = require("flow");
+    flow = require("flow"),
+    wiki = require("./index.js");
 
     // This represents no page found or an error in loading.
     var noSuchPage = {
@@ -90,10 +91,14 @@
         }
     });
 
+    ///////////////////////////////////////////////
+    //
     // Test support code to initialize, clear, and load test data into repo
+    //
 
     function TestSupport(repo) {
         this.rootPath = repo.rootPath;
+        this.repo = repo;
     }
 
     _.extend(TestSupport.prototype, {
@@ -145,6 +150,60 @@
                 }  
             );
         },
+
+        writePage: function (page, callback) {
+            var that = this;
+
+            flow.exec(
+                function () {
+                    that._writeHistory(page, this);
+                },
+                function () {
+                    that._writePageVersions(page, this);
+                },
+                function () {
+                    callback();
+                }
+            );
+        },
+
+        _writePageVersions: function(page, callback) {
+            var that = this;
+            flow.exec(
+                function () {
+                    page.revisions.forEach(function (revision, index) {
+                        var revisionFile = that.repo.revisionFileName(page.name, index + 1);
+                        var htmlText = "";
+                        wiki.toHtml(page.wikiText, function(text) {
+                            htmlText += text;
+                        });
+
+                        var revisionData = {
+                            wikiText: revision.wikiText,
+                            htmlText: htmlText
+                        };
+
+                        fs.writeFile(revisionFile, JSON.stringify(revisionData), this.MULTI());
+                    }, this);
+                },
+
+                function () {
+                    callback();
+                }
+            );
+        },
+
+        _writeHistory: function (page, callback)
+        {
+            var historyFile = this.repo.historyFileName(page.name);
+            var historyData = page.revisions.map(function (item) {
+                return {
+                    editor: item.editor,
+                    editedOn: item.editedOn
+                };
+            })
+            fs.writeFile(historyFile, JSON.stringify(historyData), callback);            
+        }
 });
 
     module.exports = new FileSystemRepository("./pages");
