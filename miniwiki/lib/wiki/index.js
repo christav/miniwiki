@@ -17,6 +17,7 @@
 
 	_.extend(exports, {
 		toHtml: toHtml,
+		readPage: models.readPage.bind(models),
 		models: models,
 		parsers: parser
 	});
