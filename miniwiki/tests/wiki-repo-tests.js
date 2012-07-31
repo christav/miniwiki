@@ -105,7 +105,7 @@ describe('page repository', function () {
                 var historyFile = wiki.models.historyFileName(currentPage.name);
                 var historyData = JSON.stringify(currentPage.history);
                 fs.writeFile(historyFile, historyData, function (err) {
-                    var revisionFile = wiki.models.revisionFileName(currentPage.name, 0);
+                    var revisionFile = wiki.models.revisionFileName(currentPage.name, 1);
 
                     currentPage.htmlText = "";
                     wiki.toHtml(currentPage.wikiText, function (text) {
@@ -132,6 +132,7 @@ describe('page repository', function () {
             wiki.readPage("PageOne", function (err, wikiData) {
                 wikiData.history.should.be.ok;
                 wikiData.history.length.should.be.above(0);
+                done();
             });
         });
     });

@@ -21,12 +21,12 @@
             var self = this;
             this._loadHistory(pageName, function (err, historyData) {
                 if (err) {
-                    console.log("Load history failed, returning empty object");
                     return callback(null, noSuchPage);
                 }
 
                 self._loadCurrentRevision(pageName, historyData, function (err, pageData) {
-                    if (err) { return callback(null, noSuchPage);
+                    if (err) { 
+                        return callback(null, noSuchPage);
                     }
 
                     callback(null, {
@@ -82,7 +82,7 @@
         },
 
         revisionFileName: function (pageName, index) {
-            return path.join(this.rootPath, pageName + "." + (index + 1) + ".json");
+            return path.join(this.rootPath, pageName + "." + index + ".json");
         }
     });
 
