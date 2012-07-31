@@ -1,4 +1,4 @@
-// Model types describing a wiki page
+// Repository implementation for node file system, 0.6
 
 (function () {
 	var _ = require("underscore"),

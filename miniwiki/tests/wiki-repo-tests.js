@@ -107,13 +107,13 @@ describe('page repository', function () {
         ];
 
         function writeHistory(page, callback) {
-            var historyFile = wiki.models.historyFileName(page.name);
+            var historyFile = wiki.fileRepository.historyFileName(page.name);
             var historyData = JSON.stringify(page.history);
             fs.writeFile(historyFile, historyData, callback);
         }
 
         function writeRevision(page, callback) {
-            var revisionFile = wiki.models.revisionFileName(page.name, 1);
+            var revisionFile = wiki.fileRepository.revisionFileName(page.name, 1);
 
             page.htmlText = "";
             wiki.toHtml(page.wikiText, function (text) {
