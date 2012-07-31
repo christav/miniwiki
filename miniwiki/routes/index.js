@@ -10,17 +10,22 @@ exports.index = function(req, res) {
 
 exports.page = function(req, res) {
     wiki.models.readPage(req.param('pageName'), function (err, pageData) {
-        var htmlText = "";
+        if(!pageData.exists) {
+            res.render('newpage', { title: req.param('pageName') });
+        } else {
+            var htmlText = "";
 
-        wiki.toHtml(pageData.wikiText, function (text) { htmlText += text; });
-        
-        var lastEdit = pageData.history[pageData.history.length - 1];
-        res.render('page', {
-            history: pageData.history,
-            lastEditor: lastEdit.editor,
-            lastEditDate: new Date(lastEdit.editedOn),
-            htmlText: htmlText,
-            wikiText: pageData.wikiText
-        });
+            wiki.toHtml(pageData.wikiText, function (text) { htmlText += text; });
+            var lastEdit = pageData.history[pageData.history.length - 1];
+
+            res.render('page', {
+                title: req.param('pageName'),
+                history: pageData.history,
+                lastEditor: lastEdit.editor,
+                lastEditDate: new Date(lastEdit.editedOn),
+                htmlText: htmlText,
+                wikiText: pageData.wikiText
+            });
+        }
     });
 };
