@@ -7,6 +7,7 @@
 
     // This represents no page found or an error in loading.
     var noSuchPage = {
+        exists: false,
         history: [],
         wikiText: "",
         htmlText: ""
@@ -30,6 +31,7 @@
                     }
 
                     callback(null, {
+                        exists: true,
                         history: historyData,
                         lastEditor: historyData[historyData.length - 1].editor,
                         lastEditDate: historyData[historyData.length - 1].editedOn,

@@ -52,6 +52,14 @@ describe('page repository', function () {
 
         beforeEach(clearRepository);
 
+        it('should return with exists flag false', function (done) {
+            wiki.readPage("PageThatDoesntExist", function (err, wikiData) {
+                should.exist(wikiData.exists);
+                wikiData.exists.should.be.false;
+                done();
+            });
+        });
+
         it('should return an empty history array', function (done) {
             wiki.readPage("SomePage", function (err, wikiData) {
                 wikiData.history.should.be.ok;
@@ -98,32 +106,6 @@ describe('page repository', function () {
             }
         ];
 
-        // function writePages(err, index, done) {
-        //     if (index === pages.length) {
-        //         done();
-        //     } else {
-        //         var currentPage = pages[index];
-        //         var historyFile = wiki.models.historyFileName(currentPage.name);
-        //         var historyData = JSON.stringify(currentPage.history);
-        //         fs.writeFile(historyFile, historyData, function (err) {
-        //             var revisionFile = wiki.models.revisionFileName(currentPage.name, 1);
-
-        //             currentPage.htmlText = "";
-        //             wiki.toHtml(currentPage.wikiText, function (text) {
-        //                 currentPage.htmlText += text;
-        //             });
-
-        //             var revisionData = JSON.stringify(currentPage.pageData);
-
-        //             fs.writeFile(revisionFile, revisionData, function (err) {
-        //                 console.log("Written data for page " + index);
-        //                 writePages(null, index + 1, done);
-        //             });
-        //         });
-        //     }
-        // }
-
-
         function writeHistory(page, callback) {
             var historyFile = wiki.models.historyFileName(page.name);
             var historyData = JSON.stringify(page.history);
@@ -155,6 +137,14 @@ describe('page repository', function () {
         beforeEach(function (done) {
             clearRepository(function () {
                 writePages(null, 0, function () { done(); });
+            });
+        });
+
+        it('should return with exists flag true', function (done) {
+            wiki.readPage("PageOne", function (err, wikiData) {
+                should.exist(wikiData.exists);
+                wikiData.exists.should.be.true;
+                done();
             });
         });
 
