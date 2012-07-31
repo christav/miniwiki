@@ -7,32 +7,44 @@ var wiki = require("./../lib/wiki"),
     should = require("should"),
     fs = require("fs"),
     path = require("path"),
-    utils = require('./test-utils.js');
+    flow = require("flow");
 
 var pagePath = "./pages";
 
 // Utility function to clear out the disk
 function clearRepository(done) {
-    path.exists(pagePath, function (exists) {
-        if(exists) {
-            fs.readdir(pagePath, function (err, files) {
-                if (err) { done(err); }
-                deleteFiles(files, 0, done);
-            });
-        } else {
-            fs.mkdir(pagePath, done);
+    flow.exec(
+        function getPathExistence() {
+            path.exists(pagePath, this);
+        },
+        function branchIfPathExists(exists) {
+            var that = this;
+            if(exists) {
+                flow.exec(
+                    function readCurrentContents() {
+                        fs.readdir(pagePath, this);
+                    },
+                    function deleteAllFiles(err, files) {
+                        if(files.length === 0) {
+                            this();
+                        } else {
+                            files.forEach(function (fileName) {
+                                fs.unlink(path.join(pagePath, fileName), this.MULTI());
+                            }, this);
+                        }
+                    },
+                    function () {
+                        that();
+                    }
+                );
+            } else {
+                this();
+            }
+        },
+        function () { 
+            done();
         }
-    });
-}
-
-function deleteFiles(files, index, done) {
-    if (index === files.length) { 
-        done();
-    } else {
-        fs.unlink(path.join(pagePath, files[index]), function (err) {
-            deleteFiles(files, index + 1, done);
-        });
-    }
+    );
 }
 
 describe('page repository', function () {
@@ -40,15 +52,6 @@ describe('page repository', function () {
     describe('when the storage is empty', function () {
 
         // Functions & state to initialize repro to empty
-
-        var numFiles;
-        var numFilesDeleted;
-        function fileDeleted(callback) {
-            ++numFilesDeleted;
-            if(numFilesDeleted === numFiles) {
-                callback();
-            }
-        }
 
         beforeEach(clearRepository);
 
@@ -125,19 +128,25 @@ describe('page repository', function () {
             fs.writeFile(revisionFile, revisionData, callback);
         }
 
-        function writePages(err, index, done) {
-            utils.eachAsync(pages,
-                function(page, index, callback) {
-                    writeHistory(page, function (err) {
-                        writeRevision(page, callback);                        
-                    });
-                }, done);
+        function writePage(page, index, done) {
+            writeHistory(page, done);
+            writeRevision(page, done);
         }
 
         beforeEach(function (done) {
-            clearRepository(function () {
-                writePages(null, 0, function () { done(); });
-            });
+            flow.exec(
+                function() {
+                    clearRepository(this);
+                },
+                function writePages() {
+                    pages.forEach(function (page, index) {
+                        writePage(page, index, this.MULTI());
+                    }, this);
+                },
+                function () {
+                    done();
+                }
+            );
         });
 
         it('should return with exists flag true', function (done) {
@@ -155,7 +164,12 @@ describe('page repository', function () {
                 done();
             });
         });
+
+        it('should include last editor', function (done) {
+            wiki.readPage("PageOne", function (err, wikiData) {
+                wikiData.lastEditor.should.equal("Chris");
+                done();
+            });
+        });
     });
-
-
 });

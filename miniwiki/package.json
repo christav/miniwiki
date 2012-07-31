@@ -7,15 +7,15 @@
     "handlebars": "*",
     "hbs": "*",
     "underscore": "*",
-    "azure": "*"
+    "azure": "*",
+    "flow": "~0.2.2"
   },
   "devDependencies": {
-    "mocha" : "*",
-    "should" : "*"
+    "mocha": "*",
+    "should": "*"
   },
   "scripts": {
     "start": "node app",
-    "test" : "mocha tests/wiki-repo-tests.js tests/wiki-parse-tests.js tests/peg-tests.js"
-
+    "test": "mocha tests/wiki-repo-tests.js tests/wiki-parse-tests.js tests/peg-tests.js"
   }
 }
