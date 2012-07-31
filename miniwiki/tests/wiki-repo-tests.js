@@ -6,7 +6,8 @@
 var wiki = require("./../lib/wiki"),
     should = require("should"),
     fs = require("fs"),
-    path = require("path");
+    path = require("path"),
+    utils = require('./test-utils.js');
 
 var pagePath = "./pages";
 
@@ -97,34 +98,63 @@ describe('page repository', function () {
             }
         ];
 
+        // function writePages(err, index, done) {
+        //     if (index === pages.length) {
+        //         done();
+        //     } else {
+        //         var currentPage = pages[index];
+        //         var historyFile = wiki.models.historyFileName(currentPage.name);
+        //         var historyData = JSON.stringify(currentPage.history);
+        //         fs.writeFile(historyFile, historyData, function (err) {
+        //             var revisionFile = wiki.models.revisionFileName(currentPage.name, 1);
+
+        //             currentPage.htmlText = "";
+        //             wiki.toHtml(currentPage.wikiText, function (text) {
+        //                 currentPage.htmlText += text;
+        //             });
+
+        //             var revisionData = JSON.stringify(currentPage.pageData);
+
+        //             fs.writeFile(revisionFile, revisionData, function (err) {
+        //                 console.log("Written data for page " + index);
+        //                 writePages(null, index + 1, done);
+        //             });
+        //         });
+        //     }
+        // }
+
+
+        function writeHistory(page, callback) {
+            var historyFile = wiki.models.historyFileName(page.name);
+            var historyData = JSON.stringify(page.history);
+            fs.writeFile(historyFile, historyData, callback);
+        }
+
+        function writeRevision(page, callback) {
+            var revisionFile = wiki.models.revisionFileName(page.name, 1);
+
+            page.htmlText = "";
+            wiki.toHtml(page.wikiText, function (text) {
+                page.htmlText += text;
+            });
+
+            var revisionData = JSON.stringify(page.pageData);
+
+            fs.writeFile(revisionFile, revisionData, callback);
+        }
+
         function writePages(err, index, done) {
-            if (index === pages.length) {
-                done();
-            } else {
-                var currentPage = pages[index];
-                var historyFile = wiki.models.historyFileName(currentPage.name);
-                var historyData = JSON.stringify(currentPage.history);
-                fs.writeFile(historyFile, historyData, function (err) {
-                    var revisionFile = wiki.models.revisionFileName(currentPage.name, 1);
-
-                    currentPage.htmlText = "";
-                    wiki.toHtml(currentPage.wikiText, function (text) {
-                        currentPage.htmlText += text;
+            utils.eachAsync(pages,
+                function(page, index, callback) {
+                    writeHistory(page, function (err) {
+                        writeRevision(page, callback);                        
                     });
-
-                    var revisionData = JSON.stringify(currentPage.pageData);
-
-                    fs.writeFile(revisionFile, revisionData, function (err) {
-                        console.log("Written data for page " + index);
-                        writePages(null, index + 1, done);
-                    });
-                });
-            }
+                }, done);
         }
 
         beforeEach(function (done) {
             clearRepository(function () {
-                writePages(null, 0, done);
+                writePages(null, 0, function () { done(); });
             });
         });
 
