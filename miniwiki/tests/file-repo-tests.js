@@ -7,7 +7,8 @@ var wiki = require("./../lib/wiki"),
     should = require("should"),
     fs = require("fs"),
     path = require("path"),
-    flow = require("flow");
+    flow = require("flow"),
+    repoBehavior = require("./repo-behavior");
 
 var pagePath = "./pages";
 
@@ -47,46 +48,22 @@ function clearRepository(done) {
     );
 }
 
-describe('page repository', function () {
+describe('file repository', function () {
 
     describe('when the storage is empty', function () {
 
         // Functions & state to initialize repro to empty
 
-        beforeEach(clearRepository);
-
-        it('should return with exists flag false', function (done) {
-            wiki.readPage("PageThatDoesntExist", function (err, wikiData) {
-                should.exist(wikiData.exists);
-                wikiData.exists.should.be.false;
+        beforeEach(function (done) {
+            var that = this;
+            this.repo = wiki.fileRepository;
+            this.repo.testSupport.clearRepository(function (){
                 done();
             });
         });
 
-        it('should return an empty history array', function (done) {
-            wiki.readPage("SomePage", function (err, wikiData) {
-                wikiData.history.should.be.ok;
-                wikiData.history.length.should.equal(0);
-                done(err);
-            });
-        });
 
-        it('should return blank data', function (done) {
-            wiki.readPage("SomeOtherPage", function (err, wikiData) {
-                should.exist(wikiData.wikiText);
-                wikiData.wikiText.should.equal("");
-                done(err);
-            });
-        });
-
-        it('should return blank html text', function (done) {
-            wiki.readPage("YetAnotherPage", function (err, wikiData) {
-                should.exist(wikiData.htmlText);
-                wikiData.htmlText.should.equal("");
-                done(err);
-            });
-        });
-
+        repoBehavior.shouldBehaveLikeAnEmptyRepository();
     });
 
     describe("when there's data on the disk", function () {
@@ -134,9 +111,11 @@ describe('page repository', function () {
         }
 
         beforeEach(function (done) {
+            var that = this;
+            this.repo = wiki.fileRepository;
             flow.exec(
                 function() {
-                    clearRepository(this);
+                    that.repo.testSupport.clearRepository(this);
                 },
                 function writePages() {
                     pages.forEach(function (page, index) {
@@ -144,32 +123,12 @@ describe('page repository', function () {
                     }, this);
                 },
                 function () {
+                    that.repo = wiki.fileRepository;
                     done();
                 }
             );
         });
 
-        it('should return with exists flag true', function (done) {
-            wiki.readPage("PageOne", function (err, wikiData) {
-                should.exist(wikiData.exists);
-                wikiData.exists.should.be.true;
-                done();
-            });
-        });
-
-        it('should return history for first page', function (done) {
-            wiki.readPage("PageOne", function (err, wikiData) {
-                wikiData.history.should.be.ok;
-                wikiData.history.length.should.be.above(0);
-                done();
-            });
-        });
-
-        it('should include last editor', function (done) {
-            wiki.readPage("PageOne", function (err, wikiData) {
-                wikiData.lastEditor.should.equal("Chris");
-                done();
-            });
-        });
+        repoBehavior.shouldBehaveLikeALoadedRepository();
     });
 });

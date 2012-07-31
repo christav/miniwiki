@@ -3,7 +3,8 @@
 (function () {
 	var _ = require("underscore"),
     fs = require("fs"),
-    path = require("path");
+    path = require("path"),
+    flow = require("flow");
 
     // This represents no page found or an error in loading.
     var noSuchPage = {
@@ -15,6 +16,7 @@
 
     function FileSystemRepository(rootPath) {
         this.rootPath = rootPath;
+        this.testSupport = new TestSupport(this);
     }
 
     _.extend(FileSystemRepository.prototype, {
@@ -87,6 +89,63 @@
             return path.join(this.rootPath, pageName + "." + index + ".json");
         }
     });
+
+    // Test support code to initialize, clear, and load test data into repo
+
+    function TestSupport(repo) {
+        this.rootPath = repo.rootPath;
+    }
+
+    _.extend(TestSupport.prototype, {
+        ensureRepositoryExists: function (callback) {
+            var that = this;
+            flow.exec(
+                function () {
+                    path.exists(that.rootPath, this);
+                },
+
+                function (exists) {
+                    if (!exists) {
+                        fs.mkdir(that.rootPath, this);
+                    } else {
+                        this();
+                    }
+                },
+                callback);
+        },
+
+        clearRepository: function (callback) {
+            var that = this;
+            flow.exec(
+                function () {
+                    that.ensureRepositoryExists(this);
+                },
+                
+                function deleteFiles(exists) {
+                    var flowCtx = this;
+                    flow.exec(
+                        function readCurrentContents() {
+                            fs.readdir(that.rootPath, flowCtx);
+                        },
+                        function deleteAllFiles(err, files) {
+                            if(files.length === 0) {
+                            flowCtx();
+                        } else {
+                            files.forEach(function (fileName) {
+                                fs.unlink(path.join(pagePath, fileName), flowCtx.MULTI());
+                            });
+                        }
+                    },
+                    function () {
+                        flowCtx();
+                    });
+                },
+                function () { 
+                    callback();
+                }  
+            );
+        },
+});
 
     module.exports = new FileSystemRepository("./pages");
 })();

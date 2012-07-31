@@ -16,6 +16,6 @@
   },
   "scripts": {
     "start": "node app",
-    "test": "mocha tests/wiki-repo-tests.js tests/wiki-parse-tests.js tests/peg-tests.js"
+    "test": "mocha tests/file-repo-tests.js tests/wiki-parse-tests.js tests/peg-tests.js"
   }
 }
