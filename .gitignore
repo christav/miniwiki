@@ -2,7 +2,7 @@ projects/*
 targets/*
 local_package.csx/*
 miniwiki/*.logs/*
-
+miniwiki/pages/*
 # Visual Studio #
 *.suo
 *.user
