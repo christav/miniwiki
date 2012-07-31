@@ -41,7 +41,7 @@
         },
 
         _loadHistory: function (pageName, callback) {
-            var historyFile = path.join(this.rootPath, pageName + ".history.json");
+            var historyFile = this.historyFileName(pageName);
             console.log("Reading history from " + historyFile);
             fs.readFile(historyFile, "utf8", function (err, data) {
                 if (err) { 
@@ -59,7 +59,7 @@
         },
 
         _loadCurrentRevision: function (pageName, history, callback) {
-            var pageFile = path.join(this.rootPath, pageName + "." + history.length + ".json");
+            var pageFile = this.revisionFileName(pageName, history.length);
             console.log("Reading current revision from " + pageFile);
             fs.readFile(pageFile, "utf8", function (err, data) {
                 if (err) { 
@@ -75,6 +75,14 @@
                     callback(exc);
                 }
             });
+        },
+
+        historyFileName: function (pageName) {
+            return path.join(this.rootPath, pageName + ".history.json");
+        },
+
+        revisionFileName: function (pageName, index) {
+            return path.join(this.rootPath, pageName + "." + (index + 1) + ".json");
         }
     });
 
