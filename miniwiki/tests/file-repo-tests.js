@@ -5,12 +5,8 @@
 
 var wiki = require("./../lib/wiki"),
     should = require("should"),
-    fs = require("fs"),
-    path = require("path"),
     flow = require("flow"),
     repoBehavior = require("./repo-behavior");
-
-var pagePath = "./pages";
 
 describe('file repository', function () {
 

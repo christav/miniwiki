@@ -4,6 +4,7 @@ var should = require("should");
 
 exports.shouldBehaveLikeAnEmptyRepository = function () {
      it('should return with exists flag false', function (done) {
+        this.timeout(10000);
         this.repo.readPage("PageThatDoesntExist", function (err, wikiData) {
             should.exist(wikiData.exists);
             wikiData.exists.should.be.false;
@@ -12,7 +13,8 @@ exports.shouldBehaveLikeAnEmptyRepository = function () {
     });
 
     it('should return an empty history array', function (done) {
-        this.repo.readPage("SomePage", function (err, wikiData) {
+            this.timeout(10000);
+            this.repo.readPage("SomePage", function (err, wikiData) {
             wikiData.history.should.be.ok;
             wikiData.history.length.should.equal(0);
             done(err);
@@ -20,6 +22,7 @@ exports.shouldBehaveLikeAnEmptyRepository = function () {
     });
 
     it('should return blank data', function (done) {
+        this.timeout(10000);
         this.repo.readPage("SomeOtherPage", function (err, wikiData) {
             should.exist(wikiData.wikiText);
             wikiData.wikiText.should.equal("");
@@ -28,6 +31,7 @@ exports.shouldBehaveLikeAnEmptyRepository = function () {
     });
 
     it('should return blank html text', function (done) {
+        this.timeout(10000);
         this.repo.readPage("YetAnotherPage", function (err, wikiData) {
             should.exist(wikiData.htmlText);
             wikiData.htmlText.should.equal("");
