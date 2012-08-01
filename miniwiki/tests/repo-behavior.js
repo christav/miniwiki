@@ -6,15 +6,22 @@ exports.shouldBehaveLikeAnEmptyRepository = function () {
      it('should return with exists flag false', function (done) {
         this.timeout(25000);
         this.repo.readPage("PageThatDoesntExist", function (err, wikiData) {
-            should.exist(wikiData.exists);
-            wikiData.exists.should.be.false;
-            done();
+            should.not.exist(err);
+            console.log("err = " + err);
+            if(err) {
+                done(err);
+            } else {
+                should.exist(wikiData.exists);
+                wikiData.exists.should.be.false;
+                done();
+            }
         });
     });
 
     it('should return an empty history array', function (done) {
-            this.timeout(25000);
-            this.repo.readPage("SomePage", function (err, wikiData) {
+        this.timeout(25000);
+        this.repo.readPage("SomePage", function (err, wikiData) {
+            if(err) { return done(err); }
             wikiData.history.should.be.ok;
             wikiData.history.length.should.equal(0);
             done(err);
@@ -24,6 +31,7 @@ exports.shouldBehaveLikeAnEmptyRepository = function () {
     it('should return blank data', function (done) {
         this.timeout(25000);
         this.repo.readPage("SomeOtherPage", function (err, wikiData) {
+            if (err) { return done(err); }
             should.exist(wikiData.wikiText);
             wikiData.wikiText.should.equal("");
             done(err);
@@ -33,6 +41,7 @@ exports.shouldBehaveLikeAnEmptyRepository = function () {
     it('should return blank html text', function (done) {
         this.timeout(25000);
         this.repo.readPage("YetAnotherPage", function (err, wikiData) {
+            if(err) { return done(err); }
             should.exist(wikiData.htmlText);
             wikiData.htmlText.should.equal("");
             done(err);
@@ -43,7 +52,9 @@ exports.shouldBehaveLikeAnEmptyRepository = function () {
 
 exports.shouldBehaveLikeALoadedRepository = function () {
     it('should return with exists flag true', function (done) {
+        this.timeout(25000);
         this.repo.readPage("PageOne", function (err, wikiData) {
+            if(err) { return done(err); }
             should.exist(wikiData.exists);
             wikiData.exists.should.be.true;
             done();
@@ -51,7 +62,9 @@ exports.shouldBehaveLikeALoadedRepository = function () {
     });
 
     it('should return history for first page', function (done) {
+        this.timeout(25000);
         this.repo.readPage("PageOne", function (err, wikiData) {
+            if(err) { return done(err); }
             wikiData.history.should.be.ok;
             wikiData.history.length.should.be.above(0);
             done();
@@ -59,7 +72,9 @@ exports.shouldBehaveLikeALoadedRepository = function () {
     });
 
     it('should include last editor', function (done) {
+        this.timeout(25000);
         this.repo.readPage("PageOne", function (err, wikiData) {
+            if(err) { return done(err); }
             wikiData.lastEditor.should.equal("Chris");
             done();
         });
