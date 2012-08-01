@@ -10,7 +10,7 @@ var azure = require("azure"),
 describe("Azure repository", function () {
     describe("when storage is empty", function () {
         before(function (done) {
-            this.timeout(10000);
+            this.timeout(25000);
             var that = this;
             this.repo = wiki.azureRepository;
             this.repo.testSupport.clearRepository(function (){

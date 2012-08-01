@@ -13,6 +13,14 @@ var azure = require("azure"),
 
 var defaultContainerName = "wikipages";
 
+// This represents no page found or an error in loading.
+var noSuchPage = {
+    exists: false,
+    history: [],
+    wikiText: "",
+    htmlText: ""
+};
+
 function AzureRepository(containerName, storageAccount, accessKey) {
     this.tableService = azure.createTableService(storageAccount, accessKey);
     this.blobService = azure.createBlobService(storageAccount, accessKey);
@@ -23,7 +31,7 @@ function AzureRepository(containerName, storageAccount, accessKey) {
 _.extend(AzureRepository.prototype, {
 
     readPage: function (pageName, callback) {
-        callback();
+        callback(null, noSuchPage);
     },
 
     _tableName: function () {
