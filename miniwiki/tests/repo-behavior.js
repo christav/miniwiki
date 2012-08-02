@@ -7,7 +7,6 @@ exports.shouldBehaveLikeAnEmptyRepository = function () {
         this.timeout(25000);
         this.repo.readPage("PageThatDoesntExist", function (err, wikiData) {
             should.not.exist(err);
-            console.log("err = " + err);
             if(err) {
                 done(err);
             } else {

@@ -47,14 +47,10 @@
 
         _loadHistory: function (pageName, callback) {
             var historyFile = this.historyFileName(pageName);
-            console.log("Reading history from " + historyFile);
             fs.readFile(historyFile, "utf8", function (err, data) {
-                if (err) { 
-                    console.log("Error reading history, " + err);
-                    return callback(err); }
+                if (err) { return callback(err); }
 
                 try {
-                    console.log("History loaded, parsing");
                     var historyData = JSON.parse(data);
                     callback(null, historyData);
                 } catch(exc) {
@@ -65,15 +61,10 @@
 
         _loadCurrentRevision: function (pageName, history, callback) {
             var pageFile = this.revisionFileName(pageName, history.length);
-            console.log("Reading current revision from " + pageFile);
             fs.readFile(pageFile, "utf8", function (err, data) {
-                if (err) { 
-                    console.log("Error reading current revision, " + err);
-                    return callback(err); 
-                }
+                if (err) { return callback(err); }
 
                 try {
-                    console.log("Current revision loaded, parsing");
                     var pageData = JSON.parse(data);
                     callback(null, pageData);
                 } catch (exc) {

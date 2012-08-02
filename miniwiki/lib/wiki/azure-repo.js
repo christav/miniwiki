@@ -9,7 +9,6 @@
 var azure = require("azure"),
     flow = require("flow"),
     _ = require("underscore"),
-    util = require("util"),
     wiki = require("./index.js");
 
 var defaultContainerName = "wikipages";
@@ -48,8 +47,6 @@ _.extend(AzureRepository.prototype, {
                 if (maxRevision === -1) {
                     return callback(null, noSuchPage);
                 }
-                console.log(util.format("Attempting to read page %s, revision %d",
-                    pageName, maxRevision));
 
                 that._loadPageRevision(pageName, maxRevision, this);
             },
@@ -61,8 +58,8 @@ _.extend(AzureRepository.prototype, {
                 var result = {
                     exists: true,
                     history: this.history,
-                    lastEditor: historyData[historyData.length - 1].editor,
-                    lastEditDate: historyData[historyData.length - 1].editedOn,
+                    lastEditor: this.history[this.history.length - 1].editor,
+                    lastEditDate: this.history[this.history.length - 1].editedOn,
                     htmlText: pageData.htmlText,
                     wikiText: pageData.wikiText
                 };
@@ -105,7 +102,6 @@ _.extend(AzureRepository.prototype, {
             blobService = this.blobService,
             blobName = this._blobName(pageName, index);
 
-        console.log("Attempting to load blob %s", blobName);
         flow.exec(
             function () {
                 blobService.getBlobToText(containerName, blobName, this);
@@ -151,12 +147,13 @@ _.extend(TestSupport.prototype, {
                 repo.tableService.createTableIfNotExists(
                     repo._tableName(), this);
             },
-            function () {
+            function (err) {
+                if (err) { return callback(makeError(err)); }
                 repo.blobService.createContainerIfNotExists(
                     repo._blobContainerName(), this);
             },
-            function () {
-                callback();
+            function (err) {
+                callback(makeError(err));
             }
         );
     },
@@ -165,23 +162,20 @@ _.extend(TestSupport.prototype, {
         var that = this;
         flow.exec(
             function () {
-                console.log("starting clear, ensuring repo exists");
                 that.ensureRepositoryExists(this);
             },
             
-            function () {
-                console.log("Deleting history");
+            function (err) {
+                if(err) { return callback(makeError(err)); }
                 that._deleteHistory(this);
             },
 
-            function () {
-                console.log("Deleting blobs");
+            function (err) {
                 that._deleteBlobs(this);
             },
 
-            function () {
-                console.log("Clear done");
-                callback();
+            function (err) {
+                callback(makeError(err));;
             }
         );
     },
@@ -195,11 +189,12 @@ _.extend(TestSupport.prototype, {
                 that._createHistoryEntries(page, this);
             },
 
-            function() {
+            function(err) {
+                if(err) { return callback(makeError(err)); }
                 that._createPageBlobs(page, this);
             },
-            function() {
-                callback();
+            function(err) {
+                callback(makeError(err));
             }
         );
     },
@@ -226,8 +221,17 @@ _.extend(TestSupport.prototype, {
                 this.MULTI()();
             },
 
-            function () {
-                callback();
+            function (argsArray) {
+                try {
+                    argsArray.forEach(function (args) {
+                        if (args[0]) {
+                            throw args[0];
+                        }
+                    })
+                    callback();
+                } catch(ex) {
+                    callback(makeError(ex));
+                }
             }
         );
     },
@@ -239,28 +243,34 @@ _.extend(TestSupport.prototype, {
 
         flow.exec(
             function () {
-                page.revisions.forEach(function(page, index) {
-                    var blobName = repo._blobName(page, index),
-                        pageData = {
-                            wikiText: page.wikiText,
+                page.revisions.forEach(function(revision, index) {
+                    var blobName = repo._blobName(page.name, index),
+                        revisionData = {
+                            wikiText: revision.wikiText,
                             htmlText: ""
                         };
 
-                    
-                    wiki.toHtml(page.wikiText, function (text) {
-                        pageData.htmlText += text;
+                    wiki.toHtml(revision.wikiText, function (text) {
+                        revisionData.htmlText += text;
                     });
 
                     blobService.createBlockBlobFromText(
                         blobContainer,
                         blobName,
-                        JSON.stringify(pageData),
+                        JSON.stringify(revisionData),
                         this.MULTI());
                 }, this);
                 this.MULTI()();
             },
-            function () {
-                callback();
+            function (argsArray) {
+                try {
+                    argsArray.forEach(function (args) {
+                        if (args[0]) throw args[0];
+                    })
+                    callback();
+                } catch (ex) {
+                    callback(makeError(ex));
+                }
             }
         );
     },
@@ -279,20 +289,26 @@ _.extend(TestSupport.prototype, {
             },
 
             function (err, entities) {
-                if(!err) {
-                    entities.forEach(function (entity) { 
-                        tableService.deleteEntity(tableName,
-                            { 
-                                PartitionKey: entity.PartitionKey,
-                                RowKey: entity.RowKey
-                            }, this.MULTI());
-                    }, this);
-                }
+                if (err) { return callback(makeError(err)); }
+                entities.forEach(function (entity) { 
+                    tableService.deleteEntity(tableName,
+                        { 
+                            PartitionKey: entity.PartitionKey,
+                            RowKey: entity.RowKey
+                        }, this.MULTI());
+                }, this);
                 this.MULTI()();
             },
 
-            function () {
-                callback();
+            function (argsArray) {
+                try {
+                    argsArray.forEach(function (args) {
+                        if (args[0]) { throw args[0]; }
+                    });
+                    callback();
+                } catch (ex) {
+                    callback(makeError(ex));
+                }
             }
         );
     },
@@ -303,25 +319,37 @@ _.extend(TestSupport.prototype, {
             containerName = repo._blobContainerName();
         flow.exec(
             function () {
-                console.log("Listing blobs in container");
                 blobService.listBlobs(containerName, this);
             },
             function (err, blobs) {
-                console.log("Blob list complete, deleting");
+                if (err) { return callback(makeError(err)); }
                 for(var index in blobs) {
-                    console.log("deleting blob " + blobs[index].name);
                     blobService.deleteBlob(containerName, blobs[index].name, 
                         this.MULTI());
                 }
                 this.MULTI()();
             },
-            function () {
-                callback();
+            function (argsArray) {
+                try {
+                    argsArray.forEach(function (args) {
+                        if (args[0]) { throw args[0]; }
+                    })
+                    callback();
+                } catch (ex) {
+                    callback(makeError(ex));
+                }
             }
         );
     },
 
 });
+
+function makeError(errObj) {
+    if(!errObj || errObj instanceof Error) {
+        return errObj;
+    }
+    return new Error(errObj.message);
+}
 
 module.exports = new AzureRepository(defaultContainerName);
 module.exports.AzureRepository = AzureRepository;
