@@ -8,8 +8,7 @@
 
 var azure = require("azure"),
     flow = require("flow"),
-    _ = require("underscore"),
-    wiki = require("./index.js");
+    _ = require("underscore");
 
 var defaultContainerName = "wikipages";
 
@@ -17,8 +16,7 @@ var defaultContainerName = "wikipages";
 var noSuchPage = {
     exists: false,
     history: [],
-    wikiText: "",
-    htmlText: ""
+    wikiText: ""
 };
 
 function AzureRepository(containerName, storageAccount, accessKey) {
@@ -60,7 +58,6 @@ _.extend(AzureRepository.prototype, {
                     history: this.history,
                     lastEditor: this.history[this.history.length - 1].editor,
                     lastEditDate: this.history[this.history.length - 1].editedOn,
-                    htmlText: pageData.htmlText,
                     wikiText: pageData.wikiText
                 };
 
@@ -247,12 +244,7 @@ _.extend(TestSupport.prototype, {
                     var blobName = repo._blobName(page.name, index),
                         revisionData = {
                             wikiText: revision.wikiText,
-                            htmlText: ""
                         };
-
-                    wiki.toHtml(revision.wikiText, function (text) {
-                        revisionData.htmlText += text;
-                    });
 
                     blobService.createBlockBlobFromText(
                         blobContainer,

@@ -18,7 +18,7 @@
 
 	_.extend(exports, {
 		toHtml: toHtml,
-		readPage: fileRepo.readPage.bind(fileRepo),
+		readPage: azureRepo.readPage.bind(azureRepo),
 		fileRepository: fileRepo,
 		azureRepository: azureRepo,
 		parsers: parser

@@ -36,17 +36,6 @@ exports.shouldBehaveLikeAnEmptyRepository = function () {
             done(err);
         });
     });
-
-    it('should return blank html text', function (done) {
-        this.timeout(25000);
-        this.repo.readPage("YetAnotherPage", function (err, wikiData) {
-            if(err) { return done(err); }
-            should.exist(wikiData.htmlText);
-            wikiData.htmlText.should.equal("");
-            done(err);
-        });
-    });
-
 };
 
 exports.shouldBehaveLikeALoadedRepository = function () {

@@ -9,7 +9,7 @@ exports.index = function(req, res) {
 };
 
 exports.page = function(req, res) {
-    wiki.models.readPage(req.param('pageName'), function (err, pageData) {
+    wiki.readPage(req.param('pageName'), function (err, pageData) {
         if(!pageData.exists) {
             res.render('newpage', { title: req.param('pageName') });
         } else {

@@ -4,15 +4,13 @@
 	var _ = require("underscore"),
     fs = require("fs"),
     path = require("path"),
-    flow = require("flow"),
-    wiki = require("./index.js");
+    flow = require("flow");
 
     // This represents no page found or an error in loading.
     var noSuchPage = {
         exists: false,
         history: [],
-        wikiText: "",
-        htmlText: ""
+        wikiText: ""
     };
 
     function FileSystemRepository(rootPath) {
@@ -38,7 +36,6 @@
                         history: historyData,
                         lastEditor: historyData[historyData.length - 1].editor,
                         lastEditDate: historyData[historyData.length - 1].editedOn,
-                        htmlText: pageData.htmlText,
                         wikiText: pageData.wikiText
                     });
                 });
@@ -164,14 +161,9 @@
                 function () {
                     page.revisions.forEach(function (revision, index) {
                         var revisionFile = that.repo.revisionFileName(page.name, index + 1);
-                        var htmlText = "";
-                        wiki.toHtml(page.wikiText, function(text) {
-                            htmlText += text;
-                        });
 
                         var revisionData = {
                             wikiText: revision.wikiText,
-                            htmlText: htmlText
                         };
 
                         fs.writeFile(revisionFile, JSON.stringify(revisionData), this.MULTI());
