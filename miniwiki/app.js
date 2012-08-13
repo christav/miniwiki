@@ -6,9 +6,10 @@
 var express = require('express')
   , routes = require('./routes')
   , http = require('http')
-  , handlebars = require('handlebars'),
-  path = require('path'),
-  fs = require('fs');
+  , handlebars = require('handlebars')
+  , path = require('path')
+  , fs = require('fs')
+  , wiki = require('./lib/wiki');
 
 var app = express.createServer();
 
@@ -40,19 +41,11 @@ function startApp() {
     });
 }
 
-path.exists('./pages', function (exists) {
-    if(!exists) {
-      console.log("pages directory doesn't exist, creating");
-      fs.mkdir('./pages', function (err) {
-        if (err) {
-          console.log('Error creating pages directory: ' + err);
-        } else {
-          startApp();
-        }
-      });
-    } else {
-      console.log('pages directory exists');
-      startApp();
-    }
-  });
-
+wiki.repo.initialize(function (err) {
+  if (err) {
+    console.log("Failure, error " + err);
+    throw new Error("Initialization failed, " + err.message);
+  }
+  console.log("Starting site");
+  startApp();
+});

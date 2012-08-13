@@ -42,6 +42,44 @@
             });
         },
 
+        initialize: function (callback) {
+            var self = this;
+            flow.exec(
+                function () {
+                    self.testSupport.ensureRepositoryExists(this);
+                },
+
+                function (err) {
+                    if(err) { callback(err); }
+                    path.exists(self.historyFileName("HomePage"), this);
+                },
+
+                function (exists) {
+                    console.log("Does home page exist? " + exists);
+                    if (!exists) {
+                        self.testSupport.writePage({
+                            name: "HomePage",
+                            revisions: [
+                                {
+                                    editor: "Chris",
+                                    editedOn: new Date(),
+                                    wikiText: "!!!! Welcome to MiniWiki\n" +
+                                        "This wiki is a learning exercise for node.js development.\n" +
+                                        "For more information see WikiMarkup or EditingPages."
+                                }
+                            ]
+                        }, this);
+                    } else {
+                        this();
+                    }
+                },
+
+                function (err) {
+                    callback(err);
+                }
+            );
+        },
+
         _loadHistory: function (pageName, callback) {
             var historyFile = this.historyFileName(pageName);
             fs.readFile(historyFile, "utf8", function (err, data) {
