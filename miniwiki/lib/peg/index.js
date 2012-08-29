@@ -22,10 +22,11 @@
 // }
 //
 
-_ = require("underscore");
+var _ = require("underscore");
 
 (function () {
-
+    'use strict';
+    
     // A reusable "match failed" result
     var failedResult = { matched: false, consumed: 0 };
 
